@@ -1,6 +1,8 @@
 package com.salonViky.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -35,13 +38,17 @@ public class Ventas {
 	private String estado;
 	
 	@ManyToOne
-	@JoinColumn(name="usuario_id")	
+	@JoinColumn(name="usuario_id")
 	private Usuario usuario;
 	
 	@ManyToOne
 	@JoinColumn(name="cliente_id")
 	private Cliente cliente;
 
+	@OneToMany(mappedBy = "ventas")
+	private List<VentaDetalle> detalles;
+	
+	
 	public Integer getId() {
 		return id;
 	}
@@ -90,6 +97,10 @@ public class Ventas {
 		this.cliente = cliente;
 	}
 
+	public Ventas() {
+		super();
+	}
+
 	public Ventas(Integer id, LocalDateTime fecha, Double total, String estado, Usuario usuario, Cliente cliente) {
 		super();
 		this.id = id;
@@ -100,14 +111,16 @@ public class Ventas {
 		this.cliente = cliente;
 	}
 
+	public Ventas(Integer id) {
+		super();
+		this.id = id;
+	}
+
+
 	@Override
 	public String toString() {
 		return "Ventas [id=" + id + ", fecha=" + fecha + ", total=" + total + ", estado=" + estado + ", usuario="
 				+ usuario + ", cliente=" + cliente + "]";
-	}
-
-	public Ventas() {
-		super();
 	}
 
 	

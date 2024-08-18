@@ -34,12 +34,12 @@ public class RolController {
 		return result;
 	}
 
-/*	@PostMapping(path ="save")
+	@PostMapping(path ="save")
 	public Rol crearRol( @RequestBody Rol rolCrear){
 		System.out.println("Crear Rol" + rolCrear);
 		//realizar una operacion de insert en la bd
 		return rolCrear;
-	}*/
+	}
 	/*@PutMapping(path ="update/{codigo}")
 	public Rol editarRol(
 			@PathVariable Integer codigo,//para indicar que vas a enviar ese dato en la url

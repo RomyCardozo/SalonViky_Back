@@ -129,6 +129,13 @@ public class Usuario {
 
 
 
+	public Usuario(Integer id) {
+		super();
+		this.id = id;
+	}
+
+
+
 	@Override
 	public String toString() {
 		return "Usuario [id=" + id + ", nombre=" + nombre + ", clave=" + clave + ", email=" + email + ", estado="

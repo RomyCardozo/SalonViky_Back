@@ -1,17 +1,14 @@
 package com.salonViky.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.salonViky.model.Servicio;
 import com.salonViky.model.Ventas;
-import com.salonViky.repository.VentasDetalleRepository;
 import com.salonViky.repository.VentasRepository;
 
 @Service
@@ -19,11 +16,6 @@ public class VentasService {
 	
 	@Autowired
 	VentasRepository vr;
-	
-	@Autowired
-	private VentasDetalleRepository vdr;
-	
-
 	
 	public List<Ventas> listar(){
 		List<Ventas> result = new ArrayList<Ventas>();
@@ -34,10 +26,6 @@ public class VentasService {
 	  public List<Ventas> findAll() {
 	        return (List<Ventas>) vr.findAll();
 	    }
-	    
-	    public List<Ventas> listarPorFechaPaginacion(LocalDateTime fecha, Pageable pageable) {
-	        return vr.findByFechaLikeIgnoreCase(fecha, pageable);
-	    }	
 		
 	    //este se utiliza para registrar y modificar
 		public Ventas guardar(Ventas ventas) {
@@ -55,6 +43,9 @@ public class VentasService {
 	    }
 
 	    	
+		  /*  public List<Ventas> listarPorFechaPaginacion(LocalDateTime fecha, Pageable pageable) {
+        return vr.findByFechaLikeIgnoreCase(fecha, pageable);
+    }*/	
 	/* public double calcularTotalVenta(Integer id) {
     Optional<VentaDetalle> detalles = vdr.findById(id);
     return detalles.stream().mapToDouble(VentaDetalle::getSubTotal).sum();

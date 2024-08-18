@@ -22,8 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.salonViky.model.Cliente;
+import com.salonViky.model.Rol;
 import com.salonViky.model.Servicio;
+import com.salonViky.model.Usuario;
 import com.salonViky.model.Ventas;
+import com.salonViky.repository.ClienteRepository;
+import com.salonViky.repository.RolRepository;
+import com.salonViky.repository.UsuarioRepository;
 import com.salonViky.service.VentasService;
 
 import jakarta.validation.ConstraintViolationException;
@@ -35,6 +41,13 @@ public class VentasController {
 	
 	@Autowired
 	VentasService vs;
+	
+	
+	@Autowired
+	UsuarioRepository usuarioRepository;
+	
+	@Autowired
+	ClienteRepository clienteRepository;
 	
 
 	@GetMapping("listar")
@@ -74,6 +87,10 @@ public class VentasController {
 	            return ResponseEntity.badRequest().body(result);
 	        }
 	        
+	        
+	        
+	        Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
+	        Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
 	        // Guardar el Servicio
 	        Ventas ventasGuardado = vs.guardar(ventas);
 	        
@@ -81,6 +98,11 @@ public class VentasController {
 	        result.put("ok", true);
 	        result.put("message", "Venta creada exitosamente.");
 	        result.put("servicio", ventasGuardado);
+	        
+	        ventas.setUsuario(usuario);
+	        ventas.setCliente(cliente);
+	        
+	        
 	        return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	    } catch (ConstraintViolationException e) {
 	        // Manejo de errores de validación
