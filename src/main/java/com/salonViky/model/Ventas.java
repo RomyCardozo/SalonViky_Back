@@ -3,9 +3,14 @@ package com.salonViky.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.context.annotation.Lazy;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,6 +20,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -28,13 +34,14 @@ public class Ventas {
 	private Integer id;
 	
 	@Temporal(TemporalType.TIMESTAMP) // timestamp es fecha y hora, le debemos especificar que es 
+	@Column(name = "fecha", nullable = false, columnDefinition = "TIMESTAMP DEFAULT NOW()")
 	@NotNull 
 	private LocalDateTime fecha;
 	
 	@NotNull 
 	private Double total;
 	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull @NotBlank 
 	private String estado;
 	
 	@ManyToOne
@@ -45,10 +52,18 @@ public class Ventas {
 	@JoinColumn(name="cliente_id")
 	private Cliente cliente;
 
-	@OneToMany(mappedBy = "ventas")
+	@OneToMany(mappedBy = "ventas" ,cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<VentaDetalle> detalles;
 	
 	
+	public List<VentaDetalle> getDetalles() {
+		return detalles;
+	}
+
+	public void setDetalles(List<VentaDetalle> detalles) {
+		this.detalles = detalles;
+	}
+
 	public Integer getId() {
 		return id;
 	}

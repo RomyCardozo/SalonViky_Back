@@ -23,18 +23,16 @@ public class Servicio {
 	@Column(name="servicio_id")
 	private Integer id;
 	
-	
-	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull @NotBlank 
 	private String nombre;
 	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull @NotBlank 
 	private String descripcion;
 	
 	@NotNull
 	private Double precio;
 	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull @NotBlank 
 	private String estado;
 	
 	@OneToMany(mappedBy = "servicio")

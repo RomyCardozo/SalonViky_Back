@@ -14,4 +14,5 @@ public class SalonBellezaVikyApplication {
 		SpringApplication.run(SalonBellezaVikyApplication.class, args);
 	}
 
+	
 }

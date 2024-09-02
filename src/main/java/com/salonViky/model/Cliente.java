@@ -9,9 +9,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name="clientes")
@@ -21,19 +23,22 @@ public class Cliente {
 	@Column(name="cliente_id")
 	private Integer id;
 	
-	@NotNull @NotBlank @NotEmpty
+	
+	@NotNull @NotBlank 
+    @Size(max = 100, message = "El nombre no puede tener más de 100 caracteres")
 	private String nombre;
 	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull @NotBlank 	
 	private String apellido;
 	
-	@NotNull @NotBlank @NotEmpty	
+	@Email
+	@NotNull @NotBlank 	
 	private String email;
 	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull @NotBlank 
 	private String telefono;
 	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull @NotBlank 
 	private String estado;
 	
 	@OneToMany(mappedBy = "cliente")

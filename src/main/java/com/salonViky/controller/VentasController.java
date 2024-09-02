@@ -1,38 +1,32 @@
 package com.salonViky.controller;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.salonViky.model.Cliente;
-import com.salonViky.model.Rol;
 import com.salonViky.model.Servicio;
 import com.salonViky.model.Usuario;
+import com.salonViky.model.VentaDetalle;
 import com.salonViky.model.Ventas;
 import com.salonViky.repository.ClienteRepository;
-import com.salonViky.repository.RolRepository;
+import com.salonViky.repository.ServicioRepository;
 import com.salonViky.repository.UsuarioRepository;
+import com.salonViky.repository.VentasDetalleRepository;
 import com.salonViky.service.VentasService;
 
-import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 
 
 @RestController
@@ -49,6 +43,12 @@ public class VentasController {
 	@Autowired
 	ClienteRepository clienteRepository;
 	
+	@Autowired
+	VentasDetalleRepository ventasDetalleRepository;
+
+	@Autowired
+	ServicioRepository servicioRepository;
+	
 
 	@GetMapping("listar")
 	private Map<String, Object> listar() {
@@ -58,65 +58,113 @@ public class VentasController {
 		return result;
 	}
 	
-	
-	@GetMapping("/obtener/{id}")
+	@GetMapping("listar/{id}")
 	public ResponseEntity<Map<String, Object>> obtenerVenta(@PathVariable("id") Integer id) {
-	  Optional<Ventas> servicio = vs.findById(id);
-	  Map<String, Object> result = new HashMap<>();
+	    Optional<Ventas> ventaOptional = vs.findById(id);
+	    Map<String, Object> result = new HashMap<>();
 	  
-	  if (servicio.isEmpty()) {
-	      result.put("ok", false);
-	      result.put("message", "No se encontraron registros con el ID proporcionado.");
-	      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
-	  } else {
-	      result.put("ok", true);
-	      result.put("venta", servicio.get());
-	      return ResponseEntity.ok(result);
-	  }
+	    if (ventaOptional.isEmpty()) {
+	        throw new RuntimeException("Venta con id: " + id + " no encontrada");
+	    } else {
+	        Ventas venta = ventaOptional.get();
+	        result.put("ok", true);
+	        result.put("venta", venta);
+	        result.put("detalles", venta.getDetalles()); // Verificar si los detalles están presentes
+	        return ResponseEntity.ok(result);
+	    }
 	}
 	
-	@PostMapping(path = "save")
-	public ResponseEntity<Map<String, Object>> crearVentas(@RequestBody Ventas ventas) {
+	@PostMapping("guardar")
+	public ResponseEntity<Map<String, Object>> crearVentas( @Valid @RequestBody Ventas ventas) {
 	    Map<String, Object> result = new HashMap<>();
-	    
-	    try {
-	        // Validar el Servicio antes de guardarlo
-	        if (ventas == null) {
-	            result.put("ok", false);
-	            result.put("message", "No se proporcionaron datos válidos del ventas.");
-	            return ResponseEntity.badRequest().body(result);
-	        }
-	        
-	        
 	        
 	        Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
 	        Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
+	       if(usuario == null) {
+	    	   throw new RuntimeException("usuario proporcionado no existe ");
+	       }else if (cliente == null) {
+	    	   throw new RuntimeException("cliente proporcionado no existe ");
+	       }
+	        
+	        
 	        // Guardar el Servicio
 	        Ventas ventasGuardado = vs.guardar(ventas);
+	        
+	        for(VentaDetalle detalle : ventas.getDetalles()) {
+	        	detalle.setVentas(ventasGuardado);
+	        	ventasDetalleRepository.save(detalle);
+	        	
+	        	
+	        }
+	        
 	        
 	        // Preparar la respuesta
 	        result.put("ok", true);
 	        result.put("message", "Venta creada exitosamente.");
 	        result.put("servicio", ventasGuardado);
-	        
 	        ventas.setUsuario(usuario);
 	        ventas.setCliente(cliente);
-	        
-	        
 	        return ResponseEntity.status(HttpStatus.CREATED).body(result);
-	    } catch (ConstraintViolationException e) {
-	        // Manejo de errores de validación
-	        result.put("ok", false);
-	        result.put("message", "Por favor, complete todos los campos obligatorios.");
-	        return ResponseEntity.badRequest().body(result);
-	    } catch (Exception e) {
-	        // Manejo de errores generales
-	        result.put("ok", false);
-	        result.put("message", e.getMessage());
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
-	    }
 	}
+	
+	@PostMapping("guardar1")
+	public ResponseEntity<Map<String, Object>> crearVentas1(@Valid @RequestBody Ventas ventas) {
+	    Map<String, Object> result = new HashMap<>();
 
+	    // Verificar si el Usuario y Cliente existen
+	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
+	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
+	    if (usuario == null) {
+	        throw new RuntimeException("El usuario proporcionado no existe.");
+	    } else if (cliente == null) {
+	        throw new RuntimeException("El cliente proporcionado no existe.");
+	    }
+
+	    // Asignar el usuario y cliente a la venta
+	    ventas.setUsuario(usuario);
+	    ventas.setCliente(cliente);
+
+	    // Guardar la venta
+	    Ventas ventasGuardado = vs.guardar(ventas);
+
+	    // Iterar sobre los detalles de la venta
+	    for (VentaDetalle detalle : ventas.getDetalles()) {
+	        // Verificar y cargar el servicio desde la base de datos
+	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
+	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
+
+	        // Asignar el servicio al detalle
+	        detalle.setServicio(servicio);
+	        
+	        // Asignar la venta al detalle
+	        detalle.setVentas(ventasGuardado);
+	        
+	        // Guardar el detalle
+	        ventasDetalleRepository.save(detalle);
+	    }
+
+	    // Preparar la respuesta
+	    result.put("ok", true);
+	    result.put("message", "Venta creada exitosamente.");
+	    result.put("venta", ventasGuardado);
+	    
+	    return ResponseEntity.status(HttpStatus.CREATED).body(result);
+	}
+	
+	@DeleteMapping(path ="delete/{codigo}")
+	public void deleteVentas(
+			@PathVariable("codigo") Integer codigo) {
+		System.out.println("eliminar la venta con ID: " + codigo);
+		Map<String, Object> result = new HashMap<>();
+		
+		if(vs.findById(codigo).isPresent()) {
+			ventasDetalleRepository.deleteById(codigo);
+			vs.deleteById(codigo);
+			throw new RuntimeException("Venta eliminada");
+			
+		}
+
+	}
 	
 	
 	

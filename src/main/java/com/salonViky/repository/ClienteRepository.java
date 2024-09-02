@@ -13,9 +13,9 @@ import com.salonViky.model.Cliente;
 @Repository
 public interface ClienteRepository extends CrudRepository<Cliente, Integer>, PagingAndSortingRepository<Cliente, Integer>{
 	
-	List<Cliente> findByNombre(String nombre);
+	/*List<Cliente> findByNombre(String nombre);
 	
-	List<Cliente>findByNombreLikeIgnoreCaseOrApellidoLikeIgnoreCase(String nombre, String apellido);
+	List<Cliente>findByNombreLikeIgnoreCaseOrApellidoLikeIgnoreCase(String nombre, String apellido);*/
 	
 	List<Cliente>findByNombreLikeIgnoreCaseOrApellidoLikeIgnoreCase(String nombre, String apellido, Pageable pageable);
 

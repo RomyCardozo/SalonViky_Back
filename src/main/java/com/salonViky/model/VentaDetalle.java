@@ -1,5 +1,8 @@
 package com.salonViky.model;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +26,7 @@ public class VentaDetalle {
 	private Integer id;
 	
 	@ManyToOne
+	@JsonIgnore
 	@JoinColumn(name="venta_id")
 	private Ventas ventas;//fk
 	
@@ -30,7 +34,7 @@ public class VentaDetalle {
 	@JoinColumn(name="servicio_id")	
 	private Servicio servicio;//fk
 	
-	@NotNull @NotBlank @NotEmpty
+	@NotNull 
 	private Integer cantidad;
 	
 	@Column(name="precio_unitario")
@@ -48,8 +52,6 @@ public class VentaDetalle {
 	public VentaDetalle() {
 		super();
 	}
-
-
 
 
 	public Integer getId() {

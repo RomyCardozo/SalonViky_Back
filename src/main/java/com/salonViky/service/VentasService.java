@@ -4,18 +4,24 @@ import java.util.ArrayList;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.salonViky.model.Ventas;
 import com.salonViky.repository.VentasRepository;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 
 @Service
 public class VentasService {
 	
 	@Autowired
 	VentasRepository vr;
+	
+	@Autowired
+	Validator validator;
 	
 	public List<Ventas> listar(){
 		List<Ventas> result = new ArrayList<Ventas>();
@@ -29,6 +35,21 @@ public class VentasService {
 		
 	    //este se utiliza para registrar y modificar
 		public Ventas guardar(Ventas ventas) {
+	        Set<ConstraintViolation<Ventas>> violations = validator.validate(ventas);
+			
+			
+			  String errorValidation = "";
+		        for (ConstraintViolation<Ventas> cv : violations) {
+		        	System.out.println("Procesando propiedad: " + cv.getPropertyPath());
+		            System.out.println("Mensaje de error: " + cv.getMessage());
+		        	errorValidation += " Error " + cv.getPropertyPath() + " " + cv.getMessage();
+		        }
+		        
+		        if (!violations.isEmpty()) {
+		        	 
+		            throw new RuntimeException(errorValidation);
+		        }
+			
 			return vr.save(ventas);
 		}
 

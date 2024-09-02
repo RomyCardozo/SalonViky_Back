@@ -21,11 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.salonViky.model.Rol;
 import com.salonViky.model.Usuario;
-import com.salonViky.model.Usuario;
 import com.salonViky.repository.RolRepository;
 import com.salonViky.service.UsuarioService;
 
-import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 
 
 
@@ -47,7 +46,95 @@ public class UsuarioController {
 		return result;
 		}
 	
-	@GetMapping("/nombre/{nombre}")
+
+	@GetMapping("consultarPaginado")
+	public Map<String, Object> listarPorLikePaginado( @RequestParam String q, Pageable pageable) {
+		
+		Map<String, Object> resultado = new HashMap<>();
+	    
+		List<Usuario> usuarios = us.listarPorNombrePaginacion("%" + q + "%", pageable);
+
+	    if (usuarios.isEmpty()) {
+	        throw new RuntimeException(" No existen los datos con los filtros proporcionados");
+	    } else {
+	        resultado.put("ok", true);
+	        resultado.put("list", usuarios);
+	    }
+
+	    return resultado;
+
+	}
+	
+	@PostMapping("guardar")
+	public ResponseEntity<Map<String, Object>> guardarUsuario( @Valid @RequestBody Usuario usuario) {
+	    Map<String, Object> result = new HashMap<>();
+	    
+	        
+	        Optional<Rol> rolExistente = rolRepository.findById(usuario.getRol().getId());
+	        if (!rolExistente.isPresent()) {
+	            throw new RuntimeException("Rol proporcionado no existe ");
+	        }else {
+	        // Guardar el usuario
+	        Usuario UsuarioGuardado = us.guardar(usuario);
+	             
+	        // Preparar la respuesta
+	        result.put("ok", true);
+	        result.put("message", "Usuario creado exitosamente.");
+	        result.put("Usuario", UsuarioGuardado);
+	        return ResponseEntity.status(HttpStatus.CREATED).body(result);}
+	}
+	
+	@PutMapping("actualizar/{id}")
+	public ResponseEntity<Map<String, Object>> actualizarUsuario(@PathVariable("id") Integer id, @RequestBody Usuario usuario) {
+	    Map<String, Object> result = new HashMap<>();
+	    
+	    // Verificar si el Usuario existe
+	    if (us.findById(id).isPresent()) {
+	        // Actualizar el Usuario
+	    	usuario.setId(id);  // Asegurarse de que el ID del Usuario se mantiene
+	        Usuario actualizado = us.guardar(usuario);    
+	        // Preparar la respuesta exitosa
+	        result.put("ok", true);
+	        result.put("message", "Usuario actualizado exitosamente.");
+	        result.put("Usuario", actualizado);
+	        return ResponseEntity.ok(result);
+	    } else {
+	    	throw new RuntimeException("Usuario no encontrado.");
+	    }
+	}
+	
+	@DeleteMapping("eliminar/{id}")
+	public ResponseEntity<Map<String, Object>> eliminarServicio(@PathVariable("id") Integer id) {
+	    Map<String, Object> result = new HashMap<>();
+	    
+	    if (us.findById(id).isPresent()) {
+	        us.deleteById(id);
+	        result.put("ok", true);
+	        result.put("message", "usuario eliminado exitosamente.");
+	        return ResponseEntity.ok(result);
+	    } else {
+	    	throw new RuntimeException("id no existe");
+	    }
+	}
+	
+	//anular cliente // en el front mostrar clientes con activo nomas
+	@PutMapping("eliminar/{id}")
+	public ResponseEntity<Map<String, Object>> eliminarClienteActivo(@PathVariable Integer id) {
+	    Map<String, Object> resultado = new HashMap<>();
+	    Usuario usuario = us.findById(id).orElse(null);
+	    
+	    if (usuario == null) {
+	        throw new RuntimeException("id no existe");
+	    }
+	    usuario.setEstado("inactivo");
+	    us.guardar(usuario);  
+	    resultado.put("ok", true);
+	    resultado.put("message", "usuario marcado como inactivo");
+	    return ResponseEntity.ok(resultado);
+	}	
+	
+	
+	/*	@GetMapping("/nombre/{nombre}")
 	public Map<String, Object> obtenerUsuarioPorNombre(@PathVariable("nombre") String nombre) {
 	    List<Usuario> usuarios = us.listarPorNombre(nombre);
 	    Map<String, Object> response = new HashMap<String, Object>();
@@ -64,108 +151,7 @@ public class UsuarioController {
 	       
 	    }
 	    return response;
-	}
-	
-	@GetMapping("consultarPaginado")
-	public Map<String, Object> listarPorLikePaginado( @RequestParam String q, Pageable pageable) {
-		
-		Map<String, Object> result = new HashMap<>();
-	    
-		List<Usuario> usuarios = us.listarPorNombrePaginacion("%" + q + "%", pageable);
-
-	    if (usuarios.isEmpty()) {
-	        result.put("ok", false);
-	        result.put("message", "No se encontraron registros con el nombre proporcionado.");
-	    } else {
-	        result.put("ok", true);
-	        result.put("list", usuarios);
-	    }
-
-	    return result;
-
-	}
-	
-	@PostMapping(path = "save")
-	public ResponseEntity<Map<String, Object>> crearUsuario(@RequestBody Usuario u) {
-	    Map<String, Object> result = new HashMap<>();
-	    
-	    try {
-	        // Validar el Usuario antes de guardarlo
-	        if (u == null) {
-	            result.put("ok", false);
-	            result.put("message", "No se proporcionaron datos válidos del Usuario.");
-	            return ResponseEntity.badRequest().body(result);
-	        }
-	        
-	        Optional<Rol> rolExistente = rolRepository.findById(u.getRol().getId());
-	        if (!rolExistente.isPresent()) {
-	            result.put("ok", false);
-	            result.put("message", "El Rol proporcionado no existe.");
-	            return ResponseEntity.badRequest().body(result);
-	        }
-	        
-	        // Guardar el usuario
-	        Usuario UsuarioGuardado = us.guardar(u);
-	        
-	        // Preparar la respuesta
-	        result.put("ok", true);
-	        result.put("message", "Usuario creado exitosamente.");
-	        result.put("Usuario", UsuarioGuardado);
-	        return ResponseEntity.status(HttpStatus.CREATED).body(result);
-	    } catch (ConstraintViolationException e) {
-	        // Manejo de errores de validación
-	        result.put("ok", false);
-	        result.put("message", "Por favor, complete todos los campos obligatorios.");
-	        return ResponseEntity.badRequest().body(result);
-	    } catch (Exception e) {
-	        // Manejo de errores generales
-	        result.put("ok", false);
-	        result.put("message", "Hubo un problema al crear el Usuario. Intente nuevamente.");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
-	    }
-	}
-	
-	@PutMapping(path = "update/{id}")
-	public ResponseEntity<Map<String, Object>> actualizarUsuario(@PathVariable("id") Integer id, @RequestBody Usuario usuario) {
-	    Map<String, Object> result = new HashMap<>();
-	    
-	    // Verificar si el Usuario existe
-	    if (us.findById(id).isPresent()) {
-	        // Actualizar el Usuario
-	    	usuario.setId(id);  // Asegurarse de que el ID del Usuario se mantiene
-	        Usuario actualizado = us.guardar(usuario);
-	        
-	        // Preparar la respuesta exitosa
-	        result.put("ok", true);
-	        result.put("message", "Usuario actualizado exitosamente.");
-	        result.put("Usuario", actualizado);
-	        return ResponseEntity.ok(result);
-	    } else {
-	        // Preparar la respuesta de error
-	        result.put("ok", false);
-	        result.put("message", "Usuario no encontrado.");
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
-	    }
-	}
-	
-	@DeleteMapping(path = "delete/{id}")
-	public ResponseEntity<Map<String, Object>> eliminarServicio(@PathVariable("id") Integer id) {
-	    Map<String, Object> result = new HashMap<>();
-	    
-	    if (us.findById(id).isPresent()) {
-	        us.deleteById(id);
-	        result.put("ok", true);
-	        result.put("message", "usuario eliminado exitosamente.");
-	        
-	        return ResponseEntity.ok(result);
-	    } else {
-	        result.put("ok", false);
-	        result.put("message", "usuario no encontrado.");
-	        
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
-	    }
-	}
-	
+	}*/
 	
 	/*
 	

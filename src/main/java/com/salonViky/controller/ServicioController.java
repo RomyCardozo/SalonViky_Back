@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.salonViky.model.Servicio;
 import com.salonViky.service.ServicioService;
 
-import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("servicio")
@@ -30,149 +31,125 @@ public class ServicioController {
 	
 @Autowired
 ServicioService servicioService;
-
+@CrossOrigin(origins = "http://localhost:5173")
 @GetMapping("listar")
 private Map<String, Object> listar() {
-	Map<String, Object> result = new HashMap<String, Object>();
-	result.put("ok",true);
-	result.put("list", servicioService.listar());
-	return result;
+	Map<String, Object> resultado = new HashMap<String, Object>();
+	resultado.put("ok",true);
+	resultado.put("list", servicioService.listar());
+	return resultado;
 
-}
-
-@GetMapping("/nombre/{nombre}")
-public Map<String, Object> obtenerServicioPorNombre(@PathVariable("nombre") String nombre) {
-    List<Servicio> servicios = servicioService.listarPorNombre(nombre);
-    Map<String, Object> response = new HashMap<String, Object>();
-    
-    if (servicios.isEmpty()) {
-        // Si no se encuentran Servicios, retornar un error 404 con un mensaje
-    	response.put("mensaje", "Servicio con nombre: " + nombre + " no encontrado");
-    	
-       
-    } else {
-        // Si se encuentran Servicios, retornar un status 200 con la lista de Servicios
-    	response.put("mensaje", "Servicio con nombre: " + nombre + " encontrado");
-        response.put("servicios", servicioService.listarPorNombre(nombre));
-       
-    }
-    return response;
 }
 
 
 //obtener por id 
-@GetMapping("/obtener/{id}")
-public ResponseEntity<Map<String, Object>> obtenerServicio(@PathVariable("id") Integer id) {
-  Optional<Servicio> servicio = servicioService.findById(id);
-  Map<String, Object> result = new HashMap<>();
+@GetMapping("listar/{id}")
+public ResponseEntity<Map<String, Object>> listarServicioPorId(@PathVariable("id") Integer id) {
+  Optional<Servicio> servicio = servicioService.buscarPorId(id);
+  Map<String, Object> resultado = new HashMap<>();
   
-  if (servicio.isEmpty()) {
-      result.put("ok", false);
-      result.put("message", "No se encontraron registros con el ID proporcionado.");
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+  if (servicio.isPresent()) {
+      resultado.put("ok", true);
+      resultado.put("Lista", servicio.get());
+      return ResponseEntity.status(HttpStatus.OK).body(resultado);
   } else {
-      result.put("ok", true);
-      result.put("servicio", servicio.get());
-      return ResponseEntity.ok(result);
+	  throw new RuntimeException("Servicio con id: " +id+ " no encontrado");
   }
 }
 
 //obtener por nombre sin importar las mayusculas, minusculas ni nada y ordenamiento con filtro
 
-@GetMapping("consultarPaginado")
+@GetMapping("listarPaginado")
 public Map<String, Object> listarPorLikePaginado( @RequestParam String q, Pageable pageable) {
 	
-	Map<String, Object> result = new HashMap<>();
+	Map<String, Object> resultado = new HashMap<>();
     
 	List<Servicio> servicios = servicioService.listarPorNombrePaginacion("%" + q + "%", pageable);
 
     if (servicios.isEmpty()) {
-        result.put("ok", false);
-        result.put("message", "No se encontraron registros con el nombre proporcionado.");
+        throw new RuntimeException("No existen resultados para el filtro proporcionado");
+
     } else {
-        result.put("ok", true);
-        result.put("list", servicios);
+        resultado.put("ok", true);
+        resultado.put("Lista", servicios);
     }
 
-    return result;
+    return resultado;
 
 }
 
 //registrar guardar
-@PostMapping(path = "save")
-public ResponseEntity<Map<String, Object>> crearServicio(@RequestBody Servicio servicio) {
-    Map<String, Object> result = new HashMap<>();
+@PostMapping("guardar")
+public ResponseEntity<Map<String, Object>> crearServicio( @Valid @RequestBody Servicio servicio) {
+    Map<String, Object> resultado = new HashMap<>();
     
-    try {
-        // Validar el Servicio antes de guardarlo
-        if (servicio == null) {
-            result.put("ok", false);
-            result.put("message", "No se proporcionaron datos válidos del Servicio.");
-            return ResponseEntity.badRequest().body(result);
-        }
         
         // Guardar el Servicio
-        Servicio ServicioGuardado = servicioService.guardar(servicio);
+        Servicio servicioGuardado = servicioService.guardar(servicio);
         
+        if(servicioGuardado == null) {
+        	throw new RuntimeException("Error al guardar");
+        }else {
         // Preparar la respuesta
-        result.put("ok", true);
-        result.put("message", "Servicio creado exitosamente.");
-        result.put("servicio", ServicioGuardado);
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
-    } catch (ConstraintViolationException e) {
-        // Manejo de errores de validación
-        result.put("ok", false);
-        result.put("message", "Por favor, complete todos los campos obligatorios.");
-        return ResponseEntity.badRequest().body(result);
-    } catch (Exception e) {
-        // Manejo de errores generales
-        result.put("ok", false);
-        result.put("message", "Hubo un problema al crear el Servicio. Intente nuevamente.");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
-    }
+        resultado.put("ok", true);
+        resultado.put("message", "Servicio creado exitosamente.");
+        resultado.put("servicio", servicioGuardado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+        }
 }
 
 
 
 //Actualiza modifica 
-@PutMapping(path = "update/{id}")
-public ResponseEntity<Map<String, Object>> actualizarServicio(@PathVariable("id") Integer id, @RequestBody Servicio servicio) {
-    Map<String, Object> result = new HashMap<>();
+@PutMapping("editar/{id}")
+public ResponseEntity<Map<String, Object>> actualizarServicio(@PathVariable("id") Integer id,@Valid @RequestBody Servicio servicio) {
+    Map<String, Object> resultado = new HashMap<>();
     
     // Verificar si el Servicio existe
-    if (servicioService.findById(id).isPresent()) {
+    if (servicioService.buscarPorId(id).isPresent()) {
         // Actualizar el Servicio
     	servicio.setId(id);  // Asegurarse de que el ID del Servicio se mantiene
         Servicio actualizado = servicioService.guardar(servicio);
         
         // Preparar la respuesta exitosa
-        result.put("ok", true);
-        result.put("message", "Servicio actualizado exitosamente.");
-        result.put("servicio", actualizado);
-        return ResponseEntity.ok(result);
+        resultado.put("ok", true);
+        resultado.put("message", "Servicio actualizado exitosamente.");
+        resultado.put("servicio", actualizado);
+        return ResponseEntity.ok(resultado);
     } else {
-        // Preparar la respuesta de error
-        result.put("ok", false);
-        result.put("message", "Servicio no encontrado.");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+    	throw new RuntimeException("Servicio con id " + id + " no existe");
     }
 }
 
-@DeleteMapping(path = "delete/{id}")
-public ResponseEntity<Map<String, Object>> eliminarServicio(@PathVariable("id") Integer id) {
-    Map<String, Object> result = new HashMap<>();
+//"elimina" temporalmente cambiando el estado a "inactivo" 
+@PutMapping("eliminar/{id}")
+public ResponseEntity<Map<String, Object>> eliminarServicioActivo(@PathVariable("id") Integer id) {
+    Map<String, Object> resultado = new HashMap<>();
     
-    if (servicioService.findById(id).isPresent()) {
-        servicioService.deleteById(id);
-        result.put("ok", true);
-        result.put("message", "Servicio eliminado exitosamente.");
-        
-        return ResponseEntity.ok(result);
+     Servicio servicio = servicioService.buscarPorId(id).orElse(null);
+    if (servicio != null ) {
+    	servicio.setEstado("inactivo");
+    	servicioService.guardar(servicio);  
+    	    resultado.put("ok", true);
+    	    resultado.put("message", "Servicio marcado como inactivo");
+    	    return ResponseEntity.ok(resultado);
     } else {
-        result.put("ok", false);
-        result.put("message", "Servicio no encontrado.");
-        
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+        throw new RuntimeException("Id no fue encontrado");
+    }
+}
+
+
+@DeleteMapping("eliminar/{id}")
+public ResponseEntity<Map<String, Object>> eliminarServicio(@PathVariable("id") Integer id) {
+    Map<String, Object> resultado = new HashMap<>();
+    
+    if (servicioService.buscarPorId(id).isPresent()) {
+        servicioService.eliminarPorId(id);
+        resultado.put("ok", true);
+        resultado.put("message", "Servicio eliminado exitosamente.");
+        return ResponseEntity.ok(resultado);
+    } else {
+    	throw new RuntimeException("Id no fue encontrado");
     }
 }
 
