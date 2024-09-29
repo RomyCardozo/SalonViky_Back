@@ -53,6 +53,7 @@ public class VentasService {
 			return vr.save(ventas);
 		}
 
+		
 	    //buscar id
 	    public Optional<Ventas> findById(Integer id) {
 	        return vr.findById(id);
