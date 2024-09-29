@@ -48,7 +48,24 @@ public class VentaDetalle {
 	@NotNull @NotBlank @NotEmpty
 	private String estado;
 
-	
+    public void actualizarDatos(VentaDetalle nuevoDetalle) {
+        this.setServicio(nuevoDetalle.getServicio());
+        this.setCantidad(nuevoDetalle.getCantidad());
+        this.setPrecioFromServicio();
+        this.calcularSubtotal();
+    }
+
+    public void setPrecioFromServicio() {
+        if (this.servicio != null) {
+            this.precioUnitario = this.servicio.getPrecio();
+        }
+    }
+
+    public void calcularSubtotal() {
+        if (this.cantidad != null && this.precioUnitario != null) {
+            this.subTotal = this.cantidad * this.precioUnitario;
+        }
+    }
 	public VentaDetalle() {
 		super();
 	}
