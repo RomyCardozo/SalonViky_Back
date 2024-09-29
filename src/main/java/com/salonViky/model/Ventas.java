@@ -55,6 +55,30 @@ public class Ventas {
 	@OneToMany(mappedBy = "ventas" ,cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<VentaDetalle> detalles;
 	
+    public void actualizarDatos(Ventas nuevaVenta) {
+        this.setFecha(nuevaVenta.getFecha());
+        this.setEstado(nuevaVenta.getEstado());
+        // Actualiza los campos de usuario y cliente
+        this.setUsuario(nuevaVenta.getUsuario()); // Asegúrate de tener un método setUsuario
+        this.setCliente(nuevaVenta.getCliente()); // Asegúrate de tener un método setClient
+        
+        // El total se calcula automáticamente, no lo actualizamos aquí
+    }
+	   public void calcularTotal() {
+	        this.total = detalles.stream()
+	                .mapToDouble(VentaDetalle::getSubTotal)
+	                .sum();
+	    }
+
+	    public void addDetalle(VentaDetalle detalle) {
+	        detalles.add(detalle);
+	        detalle.setVentas(this);
+	    }
+
+	    public void removeDetalle(VentaDetalle detalle) {
+	        detalles.remove(detalle);
+	        detalle.setVentas(null);
+	    }
 	
 	public List<VentaDetalle> getDetalles() {
 		return detalles;
