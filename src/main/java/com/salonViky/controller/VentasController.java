@@ -1,6 +1,8 @@
 package com.salonViky.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +27,7 @@ import com.salonViky.repository.ClienteRepository;
 import com.salonViky.repository.ServicioRepository;
 import com.salonViky.repository.UsuarioRepository;
 import com.salonViky.repository.VentasDetalleRepository;
+import com.salonViky.service.VentaDetalleService;
 import com.salonViky.service.VentasService;
 
 import jakarta.validation.Valid;
@@ -34,7 +38,7 @@ import jakarta.validation.Valid;
 public class VentasController {
 	
 	@Autowired
-	VentasService vs;
+	VentasService ventasService;
 	
 	
 	@Autowired
@@ -49,18 +53,21 @@ public class VentasController {
 	@Autowired
 	ServicioRepository servicioRepository;
 	
+	@Autowired
+	VentaDetalleService ventaDetalleService;
+	
 
 	@GetMapping("listar")
 	private Map<String, Object> listar() {
 		Map<String, Object> result = new HashMap<String, Object>();
 		result.put("ok",true);
-		result.put("list", vs.listar());
+		result.put("list", ventasService.listar());
 		return result;
 	}
 	
 	@GetMapping("listar/{id}")
 	public ResponseEntity<Map<String, Object>> obtenerVenta(@PathVariable("id") Integer id) {
-	    Optional<Ventas> ventaOptional = vs.findById(id);
+	    Optional<Ventas> ventaOptional = ventasService.findById(id);
 	    Map<String, Object> result = new HashMap<>();
 	  
 	    if (ventaOptional.isEmpty()) {
@@ -73,41 +80,9 @@ public class VentasController {
 	        return ResponseEntity.ok(result);
 	    }
 	}
+
 	
 	@PostMapping("guardar")
-	public ResponseEntity<Map<String, Object>> crearVentas( @Valid @RequestBody Ventas ventas) {
-	    Map<String, Object> result = new HashMap<>();
-	        
-	        Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
-	        Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
-	       if(usuario == null) {
-	    	   throw new RuntimeException("usuario proporcionado no existe ");
-	       }else if (cliente == null) {
-	    	   throw new RuntimeException("cliente proporcionado no existe ");
-	       }
-	        
-	        
-	        // Guardar el Servicio
-	        Ventas ventasGuardado = vs.guardar(ventas);
-	        
-	        for(VentaDetalle detalle : ventas.getDetalles()) {
-	        	detalle.setVentas(ventasGuardado);
-	        	ventasDetalleRepository.save(detalle);
-	        	
-	        	
-	        }
-	        
-	        
-	        // Preparar la respuesta
-	        result.put("ok", true);
-	        result.put("message", "Venta creada exitosamente.");
-	        result.put("servicio", ventasGuardado);
-	        ventas.setUsuario(usuario);
-	        ventas.setCliente(cliente);
-	        return ResponseEntity.status(HttpStatus.CREATED).body(result);
-	}
-	
-	@PostMapping("guardar1")
 	public ResponseEntity<Map<String, Object>> crearVentas1(@Valid @RequestBody Ventas ventas) {
 	    Map<String, Object> result = new HashMap<>();
 
@@ -125,24 +100,21 @@ public class VentasController {
 	    ventas.setCliente(cliente);
 
 	    // Guardar la venta
-	    Ventas ventasGuardado = vs.guardar(ventas);
+	    
+	    Ventas ventasGuardado = ventasService.guardar(ventas);
 
 	    // Iterar sobre los detalles de la venta
 	    for (VentaDetalle detalle : ventas.getDetalles()) {
 	        // Verificar y cargar el servicio desde la base de datos
 	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
 	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
-
 	        // Asignar el servicio al detalle
-	        detalle.setServicio(servicio);
-	        
+	        detalle.setServicio(servicio);        
 	        // Asignar la venta al detalle
-	        detalle.setVentas(ventasGuardado);
-	        
+	        detalle.setVentas(ventasGuardado);	        
 	        // Guardar el detalle
 	        ventasDetalleRepository.save(detalle);
 	    }
-
 	    // Preparar la respuesta
 	    result.put("ok", true);
 	    result.put("message", "Venta creada exitosamente.");
@@ -151,87 +123,332 @@ public class VentasController {
 	    return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
 	
+	@PutMapping("editar2/{id}")
+	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @RequestBody Ventas ventas) {
+	    Map<String, Object> resultado = new HashMap<>();
+
+	    try {
+	    	 Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
+	 	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
+	        // Verificar si la venta existe
+	        Ventas ventaExistente = ventasService.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
+
+	  
+		     
+		    // Actualizar los campos de la venta existente
+	       
+		    ventas.setUsuario(usuario);
+		    ventas.setCliente(cliente);
+
+		    
+		    ventaExistente.actualizarDatos(ventas);
+	        // Manejar los detalles de la venta
+	        List<VentaDetalle> detallesActualizados = new ArrayList<>();
+
+	        for (VentaDetalle detalleNuevo : ventas.getDetalles()) {
+	            Servicio servicio = servicioRepository.findById(detalleNuevo.getServicio().getId())
+	                .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
+	            
+	            VentaDetalle detalle = new VentaDetalle();
+	            detalle.setServicio(servicio);
+	            detalle.setCantidad(detalleNuevo.getCantidad());
+	            detalle.setPrecioFromServicio();
+	            detalle.calcularSubtotal();
+	            detalle.setVentas(ventaExistente);
+	            detalle.setEstado("Activo"); // Asumiendo que "Activo" es el estado por defecto
+	            
+	            // Guardar el detalle usando el servicio
+	            detalle = ventaDetalleService.guardar(detalle);
+	            
+	            detallesActualizados.add(detalle);
+	        }
+
+	        // Actualizar la lista de detalles
+	        ventaExistente.getDetalles().clear();
+	        ventaExistente.getDetalles().addAll(detallesActualizados);
+
+	        // Calcular el total de la venta
+	        ventaExistente.calcularTotal();
+
+	        // Guardar la venta actualizada
+	        Ventas ventaActualizada = ventasService.guardar(ventaExistente);
+
+	        // Preparar la respuesta
+	        resultado.put("ok", true);
+	        resultado.put("message", "Venta actualizada exitosamente.");
+	        resultado.put("venta", ventaActualizada);
+
+	        return ResponseEntity.status(HttpStatus.OK).body(resultado);
+
+	    } catch (RuntimeException e) {
+	        resultado.put("ok", false);
+	        resultado.put("message", "Error al actualizar la venta: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultado);
+	    }
+	}
+	
+
+
 	@DeleteMapping(path ="delete/{codigo}")
 	public void deleteVentas(
 			@PathVariable("codigo") Integer codigo) {
 		System.out.println("eliminar la venta con ID: " + codigo);
 		Map<String, Object> result = new HashMap<>();
 		
-		if(vs.findById(codigo).isPresent()) {
+		if(ventasService.findById(codigo).isPresent()) {
 			ventasDetalleRepository.deleteById(codigo);
-			vs.deleteById(codigo);
+			ventasService.deleteById(codigo);
 			throw new RuntimeException("Venta eliminada");
 			
 		}
 
 	}
 	
-	
-	
-	/*@GetMapping("consultarPaginado")
-	public Map<String, Object> listarPorLikePaginado( @RequestParam LocalDateTime q, Pageable pageable) {
-		
-		Map<String, Object> result = new HashMap<>();
+	@PutMapping("eliminar/{id}")
+	public ResponseEntity<Map<String, Object>> eliminarVentasActivo(@PathVariable Integer id) {
+	    Map<String, Object> resultado = new HashMap<>();
+	    Ventas ventas = ventasService.findById(id).orElse(null);
 	    
-		List<Ventas> ventas = vs.listarPorFechaPaginacion(q , pageable);
-
-	    if (ventas.isEmpty()) {
-	        result.put("ok", false);
-	        result.put("message", "No se encontraron registros con la fecha proporcionado.");
-	    } else {
-	        result.put("ok", true);
-	        result.put("list", ventas);
+	    if (ventas == null) {
+	        throw new RuntimeException("La venta con id " + id + " no existe.");
 	    }
 
-	    return result;
+	    // Actualizar el estado de cada VentaDetalle asociado a esta venta
+	    for (VentaDetalle detalle : ventas.getDetalles()) {
+	        detalle.setEstado("Inactivo");  // Actualizar el estado a "Inactivo"
+	        ventasDetalleRepository.save(detalle);  // Guardar los cambios en cada detalle
+	    }
 
-	}*/
-	
+	    // Marcar la venta como inactiva
+	    ventas.setEstado("Inactivo");
+	    ventasService.guardar(ventas);
 
-	/*@PostMapping(path ="save")
-	public Ventas crearVentas( @RequestBody Ventas ventasRegistrar){
-		System.out.println("Registrar venta" + ventasRegistrar);
-		//realizar una operacion de insert en la bd
-		return ventasRegistrar;
-	}
-	@PutMapping(path ="update/{codigo}")
-	public Ventas modificarVentas(
-			@PathVariable Integer codigo,//para indicar que vas a enviar ese dato en la url
-			@RequestBody Ventas ventasModificar,
-			@RequestHeader Map<String, String> header) {
-		System.out.println("Cabezera, autorization: " + header );
-		System.out.println("Modificar la venta con ID: " + codigo);
-		System.out.println(" Data: " + ventasModificar);
-		ventasModificar.setId(codigo);
+	    // Preparar la respuesta
+	    resultado.put("ok", true);
+	    resultado.put("message", "Venta y sus detalles marcados como inactivos.");
 	    
-	    return ventasModificar;
+	    return ResponseEntity.ok(resultado);
 	}
+	/*este funciona pero duplica el id de detalle 
+	 * 	@PutMapping("editar2/{id}")
+	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @Valid @RequestBody Ventas ventas) {
+	    Map<String, Object> resultado = new HashMap<>();
 
-	@DeleteMapping(path ="delete/{codigo}")
-	public void deleteVentas(
-			@PathVariable Integer codigo,//para indicar que vas a enviar ese dato en la url
-			@RequestHeader Map<String, String> header) {
-		System.out.println("eliminar la venta con ID: " + codigo);
+	    // Verificar si la venta, el usuario y cliente existen
+	    Ventas ventaExistente = ventasService.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
+	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
+	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
+	    
+	    if (usuario == null) {
+	        throw new RuntimeException("El usuario proporcionado no existe.");
+	    } else if (cliente == null) {
+	        throw new RuntimeException("El cliente proporcionado no existe.");
+	    }
 
+	    // Asignar el ID de la venta, usuario y cliente
+	    ventas.setId(id); // Mantener el ID de la venta
+	    ventas.setUsuario(ventaExistente.getUsuario()); // Mantener el usuario
+	    ventas.setCliente(ventaExistente.getCliente()); // Mantener el client_e
+	    
+	    // Guardar la venta actualizada
+	    Ventas ventaActualizada = ventasService.guardar(ventas);
+	    
+	    ventaActualizada.setId(id);
+	    
+	    ventaActualizada.getDetalles().clear();
+	    
+	    // Iterar sobre los detalles de la venta
+	    for (VentaDetalle detalle : ventas.getDetalles()) {
+	        // Verificar y cargar el servicio desde la base de datos
+	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
+	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
+	        // Asignar el servicio al detalle
+	        detalle.setServicio(servicio);        
+	        // Asignar la venta al detalle
+	        detalle.setVentas(ventaActualizada);	
+	        ventaExistente.getDetalles().add(detalle);
+	        // Guardar el detalle
+	       // ventasDetalleRepository.save(detalle);
+	        
+	    }
+	  Ventas ventasNew =  ventasService.guardar(ventaActualizada);
+
+	    // Preparar la respuesta
+	    resultado.put("ok", true);
+	    resultado.put("message", "Venta actualizada exitosamente.");
+	    resultado.put("venta", ventasNew);
+	    
+	    return ResponseEntity.status(HttpStatus.OK).body(resultado);
 	}
+	 */
 	
-	*/
-	
-	/*@GetMapping(path = "listar")
-	public List<Ventas> listaVentas(
-	    @RequestParam(name = "F", 
-	    defaultValue = "%%", 
-	    required = true) String filtro, 
-	    @RequestParam Integer page, 
-	    @RequestParam Integer size) {
-	    List<Ventas> listaVentas = ventasService.obtenerPorFiltroYPaginacion
-	    		(filtro, page, size);
+/*		@PutMapping("editar2/{id}")
+	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @Valid @RequestBody Ventas ventas) {
+	    Map<String, Object> resultado = new HashMap<>();
 
-	    return listaVentas;
-	}*/	
-	/*@GetMapping("/venta/{id}/total")
-	public double obtenerTotalVenta(@PathVariable("id") Integer id) {
-	    return vs.calcularTotalVenta(id);
+	    // Verificar si la venta, el usuario y cliente existen
+	    Ventas ventaExistente = ventasService.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
+	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
+	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
+	    
+	    if (usuario == null) {
+	        throw new RuntimeException("El usuario proporcionado no existe.");
+	    } else if (cliente == null) {
+	        throw new RuntimeException("El cliente proporcionado no existe.");
+	    }
+
+	    // Asignar el ID de la venta, usuario y cliente
+	    ventas.setId(id); // Mantener el ID de la venta
+	    ventas.setUsuario(ventaExistente.getUsuario()); // Mantener el usuario
+	    ventas.setCliente(ventaExistente.getCliente()); // Mantener el client_e
+	    
+	    // Guardar la venta actualizada
+	    Ventas ventaActualizada = ventasService.guardar(ventas);
+	    
+	    ventaActualizada.setId(id);
+	    
+	    ventaActualizada.getDetalles().clear();
+	    double total = 0;
+	    
+	    // Iterar sobre los detalles de la venta
+	    for (VentaDetalle detalle : ventas.getDetalles()) {
+	        // Verificar y cargar el servicio desde la base de datos
+	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
+	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
+	        // Asignar el servicio al detalle
+	        detalle.setServicio(servicio);        
+	        // Asignar la venta al detalle
+	        detalle.setVentas(ventaActualizada);	
+	        
+	        // Calcular subtotal y añadirlo al total
+	        double subtotal = detalle.getCantidad() * detalle.getPrecioUnitario();
+	        detalle.setSubTotal(subtotal);
+	        total += subtotal;
+	        
+	        // Guardar el detalle
+	        ventasDetalleRepository.save(detalle);
+	    }
+
+	    ventaExistente.setTotal(total);
+	    
+	    Ventas ventacreada = ventasService.guardar(ventaExistente);
+
+	    // Preparar la respuesta
+	    resultado.put("ok", true);
+	    resultado.put("message", "Venta actualizada exitosamente.");
+	    resultado.put("venta", ventacreada);
+	    
+	    return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
 	}*/
 	
+	// hug
+	/*@PutMapping("editar2/{id}")
+	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @Valid @RequestBody Ventas ventas) {
+	    Map<String, Object> resultado = new HashMap<>();
+
+	    // Verificar si la venta, el usuario y cliente existen
+	    Ventas ventaExistente = ventasService.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
+	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
+	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
+	    
+	    if (usuario == null) {
+	        throw new RuntimeException("El usuario proporcionado no existe.");
+	    } else if (cliente == null) {
+	        throw new RuntimeException("El cliente proporcionado no existe.");
+	    }
+
+	    // Asignar el ID de la venta, usuario y cliente
+	    ventas.setId(id); // Mantener el ID de la venta
+	    ventas.setUsuario(ventaExistente.getUsuario()); // Mantener el usuario
+	    ventas.setCliente(ventaExistente.getCliente()); // Mantener el client_e
+	    
+	    // Guardar la venta actualizada
+	    Ventas ventaActualizada = ventasService.guardar(ventas);
+	    
+	    ventaActualizada.setId(id);
+	    
+	    ventaActualizada.getDetalles().clear();
+	    
+	    // Iterar sobre los detalles de la venta
+	    for (VentaDetalle detalle : ventas.getDetalles()) {
+	        // Verificar y cargar el servicio desde la base de datos
+	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
+	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
+	        // Asignar el servicio al detalle
+	        detalle.setServicio(servicio);        
+	        // Asignar la venta al detalle
+	        detalle.setVentas(ventaActualizada);	
+ 			ventasDetalleRepository.save(detalle);
+	        
+	    }
+	  Ventas ventasNew =  ventasService.guardar(ventaActualizada);
+
+	    // Preparar la respuesta
+	    resultado.put("ok", true);
+	    resultado.put("message", "Venta actualizada exitosamente.");
+	    resultado.put("venta", ventasNew);
+	    
+	    return ResponseEntity.status(HttpStatus.OK).body(resultado);
+	}*/
+	/*	@PutMapping("editar/{id}")
+	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @RequestBody Ventas ventas) {
+	    Map<String, Object> resultado = new HashMap<>();
+
+	    // Verificar si la venta, el usuario y cliente existen
+	    Ventas ventaExistente = ventasService.findById(id)
+	        .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
+	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId())
+	        .orElseThrow(() -> new RuntimeException("El usuario proporcionado no existe."));
+	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId())
+	        .orElseThrow(() -> new RuntimeException("El cliente proporcionado no existe."));
+
+	    // Actualizar los campos de la venta existente
+	    ventaExistente.setFecha(ventas.getFecha());
+	    ventaExistente.setTotal(ventas.getTotal());
+	    ventaExistente.setEstado(ventas.getEstado());
+	    
+	    // Manejar los detalles de la venta
+	    List<VentaDetalle> detallesActualizados = new ArrayList<VentaDetalle>();
+	    
+	    double total = 0;
+	    for (VentaDetalle detalleNuevo : ventas.getDetalles()) {
+	        VentaDetalle detalleExistente = ventaExistente.getDetalles().stream()
+	            .filter(d -> d.getId().equals(detalleNuevo.getId()))
+	            .findFirst()
+	            .orElse(null);
+
+	      
+	            // Crear nuevo detalle
+	            Servicio servicio = servicioRepository.findById(detalleNuevo.getServicio().getId())
+	                .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
+
+	         
+	            detalleNuevo.setServicio(servicio);
+	            detalleNuevo.setVentas(ventaExistente);
+	            detalleNuevo.setId(null); // Asegurarse de que se genere un nuevo ID
+	            detallesActualizados.add(detalleNuevo);
+	    }
+
+	    
+	    // Actualizar la lista de detalles
+	    ventaExistente.getDetalles().clear();
+	    ventaExistente.getDetalles().addAll(detallesActualizados);
+
+	    ventaExistente.setTotal(total);
+	    
+	    // Guardar la venta actualizada
+	    Ventas ventaActualizada = ventasService.guardar(ventaExistente);
+
+	    // Preparar la respuesta
+	    resultado.put("ok", true);
+	    resultado.put("message", "Venta actualizada exitosamente.");
+	    resultado.put("venta", ventaActualizada);
+
+	    return ResponseEntity.status(HttpStatus.OK).body(resultado);
+	}*/
+
 }
