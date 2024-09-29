@@ -138,7 +138,7 @@ public ResponseEntity<Map<String, Object>> eliminarClienteActivo(@PathVariable I
         throw new RuntimeException("id no existe");
     }
     
-    cliente.setEstado("inactivo");
+    cliente.setEstado("Inactivo");
     clienteService.guardar(cliente);  
     resultado.put("ok", true);
     resultado.put("message", "Cliente marcado como inactivo");
