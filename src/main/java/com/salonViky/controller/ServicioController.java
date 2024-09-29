@@ -31,7 +31,6 @@ public class ServicioController {
 	
 @Autowired
 ServicioService servicioService;
-@CrossOrigin(origins = "http://localhost:5173")
 @GetMapping("listar")
 private Map<String, Object> listar() {
 	Map<String, Object> resultado = new HashMap<String, Object>();
@@ -128,7 +127,7 @@ public ResponseEntity<Map<String, Object>> eliminarServicioActivo(@PathVariable(
     
      Servicio servicio = servicioService.buscarPorId(id).orElse(null);
     if (servicio != null ) {
-    	servicio.setEstado("inactivo");
+    	servicio.setEstado("Inactivo");
     	servicioService.guardar(servicio);  
     	    resultado.put("ok", true);
     	    resultado.put("message", "Servicio marcado como inactivo");

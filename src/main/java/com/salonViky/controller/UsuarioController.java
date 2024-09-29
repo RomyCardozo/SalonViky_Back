@@ -126,7 +126,7 @@ public class UsuarioController {
 	    if (usuario == null) {
 	        throw new RuntimeException("id no existe");
 	    }
-	    usuario.setEstado("inactivo");
+	    usuario.setEstado("Inactivo");
 	    us.guardar(usuario);  
 	    resultado.put("ok", true);
 	    resultado.put("message", "usuario marcado como inactivo");
