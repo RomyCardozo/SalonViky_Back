@@ -53,6 +53,28 @@ public class VentasService {
 			return vr.save(ventas);
 		}
 
+
+		public Ventas actualizar(Ventas ventas) {
+	        // Calcular el total usando el método existente
+	        ventas.calcularTotal();
+
+	        // Realizar la validación
+	        Set<ConstraintViolation<Ventas>> violations = validator.validate(ventas);
+
+	        if (!violations.isEmpty()) {
+	            StringBuilder errorMessage = new StringBuilder();
+	            for (ConstraintViolation<Ventas> violation : violations) {
+	                errorMessage.append("Error en ")
+	                            .append(violation.getPropertyPath())
+	                            .append(": ")
+	                            .append(violation.getMessage())
+	                            .append(". ");
+	            }
+	            throw new RuntimeException(errorMessage.toString());
+	        }
+
+	        return vr.save(ventas);
+	    }
 		
 	    //buscar id
 	    public Optional<Ventas> findById(Integer id) {
