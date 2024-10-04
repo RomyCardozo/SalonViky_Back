@@ -39,7 +39,7 @@ public class Cliente {
 	private String telefono;
 	
 	@NotNull @NotBlank 
-	private String estado;
+	private String estado = "Activo";
 	
 	@OneToMany(mappedBy = "cliente")
 	private List<Ventas> ventas;

@@ -64,6 +64,23 @@ public class VentasController {
 		result.put("list", ventasService.listar());
 		return result;
 	}
+
+	// Endpoint para obtener los detalles de una venta usando el ID de la venta
+    @GetMapping("/listard/{id}")
+    public ResponseEntity<List<VentaDetalle>> obtenerDetallesPorVenta(@PathVariable Integer id) {
+        try {
+            List<VentaDetalle> detalles = ventaDetalleService.getVentaDetallesPorVentaId(id);
+            if (detalles.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            } else {
+                return ResponseEntity.ok(detalles);
+            }
+        } catch (Exception e) {
+            // Log el error para tener información sobre lo que falló
+            System.err.println("Error al obtener detalles de la venta: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 	
 	@GetMapping("listar/{id}")
 	public ResponseEntity<Map<String, Object>> obtenerVenta(@PathVariable("id") Integer id) {
@@ -122,6 +139,54 @@ public class VentasController {
 	    
 	    return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
+	
+	@PostMapping("guardar1")
+	public ResponseEntity<Map<String, Object>> crearVentas( @RequestBody Ventas ventas) {
+	    Map<String, Object> result = new HashMap<>();
+
+	    // Verificar si el Usuario y Cliente existen
+	    try {
+	        // Verificar y asignar usuario y cliente
+	        Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId())
+	                .orElseThrow(() -> new RuntimeException("El usuario proporcionado no existe."));
+	        Cliente cliente = clienteRepository.findById(ventas.getCliente().getId())
+	                .orElseThrow(() -> new RuntimeException("El cliente proporcionado no existe."));
+
+	        ventas.setUsuario(usuario);
+	        ventas.setCliente(cliente);
+
+	        // Procesar detalles
+	        for (VentaDetalle detalle : ventas.getDetalles()) {
+	            Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
+	                    .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
+	            detalle.setServicio(servicio);
+	            detalle.setPrecioFromServicio();
+	            detalle.calcularSubtotal();
+	            detalle.setVentas(ventas);
+	        }
+
+	        // Calcular total
+	        ventas.calcularTotal();
+
+	        // Guardar la venta
+	        Ventas ventasGuardado = ventasService.actualizar(ventas);
+
+	        result.put("ok", true);
+	        result.put("message", "Venta creada exitosamente.");
+	        result.put("venta", ventasGuardado);
+
+	        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+
+	    } catch (Exception e) {
+	        result.put("ok", false);
+	        result.put("message", "Error al crear la venta: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+	    }
+	}
+
+
+	
+	
 	
 	@PutMapping("editar2/{id}")
 	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @RequestBody Ventas ventas) {
