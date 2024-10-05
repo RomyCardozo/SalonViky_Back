@@ -74,6 +74,8 @@ public class UsuarioController {
 	        if (!rolExistente.isPresent()) {
 	            throw new RuntimeException("Rol proporcionado no existe ");
 	        }else {
+	        	// Asignar el rol encontrado al usuario
+	            usuario.setRol(rolExistente.get());
 	        // Guardar el usuario
 	        Usuario UsuarioGuardado = us.guardar(usuario);
 	             

@@ -1,5 +1,13 @@
 package com.salonViky.model;
 
+import java.util.Collection;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,9 +20,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.Collections;
+
+
 @Entity
 @Table(name="usuarios")
-public class Usuario {
+public class Usuario implements UserDetails{
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -141,8 +152,50 @@ public class Usuario {
 		return "Usuario [id=" + id + ", nombre=" + nombre + ", clave=" + clave + ", email=" + email + ", estado="
 				+ estado + ", rol=" + rol + "]";
 	}
+
+
+
+	@Override
+	@JsonIgnore
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return Collections.singleton(new SimpleGrantedAuthority(rol.getDescripcion()));
+	}
+
+
+
+	@Override
+	public String getPassword() {
+		// TODO Auto-generated method stub
+		 return clave;
+	}
+
+
+
+	@Override
+	public String getUsername() {
+		// TODO Auto-generated method stub
+		return nombre;
+	}
 	
-	
+	@Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return "Activo".equals(estado); // Verifica si el usuario está activo
+    }
 	
 	
 

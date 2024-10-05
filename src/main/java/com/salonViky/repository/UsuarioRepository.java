@@ -16,10 +16,11 @@ import com.salonViky.model.Usuario;
 @Repository
 public interface UsuarioRepository extends CrudRepository<Usuario, Integer>, PagingAndSortingRepository<Usuario, Integer>{
 
-	List<Usuario> findByNombre(String nombre);
+	Optional<Usuario> findByNombre(String nombre);
 	
 	List<Usuario>findByNombreLikeIgnoreCase(String nombre, Pageable pageable);
 	
-	Optional<Usuario> findByEmail(String email);
+	//Optional<Usuario> findByEmail(String email);
+	
 	
 }
