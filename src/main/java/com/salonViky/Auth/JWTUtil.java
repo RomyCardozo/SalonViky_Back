@@ -13,7 +13,8 @@ import java.util.function.Function;
 public class JWTUtil {
 
     private String SECRET_KEY = "laClaveSecretaGeneradaQueEsMuchoMasLargaYSegura";
-
+    private long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24; // 24 horas
+    
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -38,14 +39,36 @@ public class JWTUtil {
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+        return createToken(claims, username, 1000 * 60 * 60 * 10);
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    //refreshh  
+    public String generateRefreshToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, username, REFRESH_TOKEN_VALIDITY);
+    }
+    
+    private String createToken(Map<String, Object> claims, String subject, long validity) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + validity))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
+    }
+    
+    
+    public boolean validateRefreshToken(String token) {
+        return !isTokenExpired(token);
+    }
+    
+    //crear token
+  /*  private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
-    }
+    }*/
 
     public boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);

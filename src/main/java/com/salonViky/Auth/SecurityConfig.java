@@ -41,13 +41,15 @@ public class SecurityConfig{
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/auth/login", "/auth/register","/usuario/guardar").permitAll() // Asegúrate de permitir el login
-                        .anyRequest().authenticated() // Otras rutas requieren autenticación
-                )
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    	http.csrf().disable()
+        .cors() // Habilita CORS
+        .and()
+        .authorizeHttpRequests((auth) -> auth
+                .requestMatchers("/auth/login", "/auth/register","/usuario/guardar").permitAll() // Asegúrate de permitir el login
+                .anyRequest().authenticated() // Otras rutas requieren autenticación
+        )
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
