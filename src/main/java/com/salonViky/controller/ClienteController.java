@@ -1,4 +1,4 @@
-package com.salonViky.controller;
+	package com.salonViky.controller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +108,7 @@ public ResponseEntity<Map<String, Object>> editarCliente(@PathVariable("id") Int
         // Preparar la respuesta exitosa
         result.put("ok", true);
         result.put("Mensaje", "Cliente actualizado exitosamente.");
-        result.put("cliente", clienteService.guardar(cliente));
+        result.put("cliente", clienteService.actualizar(cliente));
         return ResponseEntity.ok(result);
     } else {
     	throw new RuntimeException("Producto con id " + id + " no existe");
@@ -139,7 +139,7 @@ public ResponseEntity<Map<String, Object>> eliminarClienteActivo(@PathVariable I
     }
     
     cliente.setEstado("Inactivo");
-    clienteService.guardar(cliente);  
+    clienteService.eliminarActivo(cliente);  
     resultado.put("ok", true);
     resultado.put("message", "Cliente marcado como inactivo");
     return ResponseEntity.ok(resultado);

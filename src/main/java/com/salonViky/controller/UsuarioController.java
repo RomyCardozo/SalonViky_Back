@@ -33,7 +33,7 @@ import jakarta.validation.Valid;
 public class UsuarioController {
 	
 	@Autowired
-	UsuarioService us;
+	UsuarioService usuarioService;
 	
     @Autowired
      RolRepository rolRepository;
@@ -42,7 +42,7 @@ public class UsuarioController {
 	public Map<String, Object> listar() {
 		Map<String, Object> result = new HashMap<String, Object>();
 		result.put("ok",true);
-		result.put("list", us.listar());
+		result.put("list", usuarioService.listar());
 		return result;
 		}
 	
@@ -52,7 +52,7 @@ public class UsuarioController {
 		
 		Map<String, Object> resultado = new HashMap<>();
 	    
-		List<Usuario> usuarios = us.listarPorNombrePaginacion("%" + q + "%", pageable);
+		List<Usuario> usuarios = usuarioService.listarPorNombrePaginacion("%" + q + "%", pageable);
 
 	    if (usuarios.isEmpty()) {
 	        throw new RuntimeException(" No existen los datos con los filtros proporcionados");
@@ -77,7 +77,7 @@ public class UsuarioController {
 	        	// Asignar el rol encontrado al usuario
 	            usuario.setRol(rolExistente.get());
 	        // Guardar el usuario
-	        Usuario UsuarioGuardado = us.guardar(usuario);
+	        Usuario UsuarioGuardado = usuarioService.guardar(usuario);
 	             
 	        // Preparar la respuesta
 	        result.put("ok", true);
@@ -91,10 +91,10 @@ public class UsuarioController {
 	    Map<String, Object> result = new HashMap<>();
 	    
 	    // Verificar si el Usuario existe
-	    if (us.findById(id).isPresent()) {
+	    if (usuarioService.findById(id).isPresent()) {
 	        // Actualizar el Usuario
 	    	usuario.setId(id);  // Asegurarse de que el ID del Usuario se mantiene
-	        Usuario actualizado = us.guardar(usuario);    
+	        Usuario actualizado = usuarioService.actualizar(usuario);    
 	        // Preparar la respuesta exitosa
 	        result.put("ok", true);
 	        result.put("message", "Usuario actualizado exitosamente.");
@@ -109,8 +109,8 @@ public class UsuarioController {
 	public ResponseEntity<Map<String, Object>> eliminarServicio(@PathVariable("id") Integer id) {
 	    Map<String, Object> result = new HashMap<>();
 	    
-	    if (us.findById(id).isPresent()) {
-	        us.deleteById(id);
+	    if (usuarioService.findById(id).isPresent()) {
+	    	usuarioService.deleteById(id);
 	        result.put("ok", true);
 	        result.put("message", "usuario eliminado exitosamente.");
 	        return ResponseEntity.ok(result);
@@ -123,13 +123,13 @@ public class UsuarioController {
 	@PutMapping("eliminar/{id}")
 	public ResponseEntity<Map<String, Object>> eliminarClienteActivo(@PathVariable Integer id) {
 	    Map<String, Object> resultado = new HashMap<>();
-	    Usuario usuario = us.findById(id).orElse(null);
+	    Usuario usuario = usuarioService.findById(id).orElse(null);
 	    
 	    if (usuario == null) {
 	        throw new RuntimeException("id no existe");
 	    }
 	    usuario.setEstado("Inactivo");
-	    us.guardar(usuario);  
+	    usuarioService.eliminarActivo(usuario);  
 	    resultado.put("ok", true);
 	    resultado.put("message", "usuario marcado como inactivo");
 	    return ResponseEntity.ok(resultado);

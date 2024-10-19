@@ -38,6 +38,14 @@ public class ClienteService {
         return clienteRepository.save(cliente);
     }
 
+    public Cliente actualizar(Cliente cliente) {
+        //auditoriaservice.guardar(usuario,"edicion de usuario", "cliente", cliente.id)
+        return clienteRepository.save(cliente);
+    }
+    
+    public Cliente eliminarActivo(Cliente cliente) {
+        return clienteRepository.save(cliente);
+    }
     //buscar id
     public Optional<Cliente> buscarPorId(Integer id) {
         return clienteRepository.findById(id);

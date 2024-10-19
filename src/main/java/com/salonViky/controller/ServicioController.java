@@ -108,7 +108,7 @@ public ResponseEntity<Map<String, Object>> actualizarServicio(@PathVariable("id"
     if (servicioService.buscarPorId(id).isPresent()) {
         // Actualizar el Servicio
     	servicio.setId(id);  // Asegurarse de que el ID del Servicio se mantiene
-        Servicio actualizado = servicioService.guardar(servicio);
+        Servicio actualizado = servicioService.actualizar(servicio);
         
         // Preparar la respuesta exitosa
         resultado.put("ok", true);
@@ -128,7 +128,7 @@ public ResponseEntity<Map<String, Object>> eliminarServicioActivo(@PathVariable(
      Servicio servicio = servicioService.buscarPorId(id).orElse(null);
     if (servicio != null ) {
     	servicio.setEstado("Inactivo");
-    	servicioService.guardar(servicio);  
+    	servicioService.eliminarActivo(servicio) ;
     	    resultado.put("ok", true);
     	    resultado.put("message", "Servicio marcado como inactivo");
     	    return ResponseEntity.ok(resultado);
@@ -153,39 +153,6 @@ public ResponseEntity<Map<String, Object>> eliminarServicio(@PathVariable("id") 
 }
 
 	
-
-/*@GetMapping("listar")
-public List<Servicio> listarServicios(){
-	return new ArrayList<Servicio>();
-}*/
-
-/*@PostMapping(path ="save")
-public Servicio crearServicios( @RequestBody Servicio servicioCrear){
-	System.out.println("Crear servicio" + servicioCrear);
-	//realizar una operacion de insert en la bd
-	return servicioCrear;
-}
-@PutMapping(path ="update/{codigo}")
-public Servicio editarServicios(
-		@PathVariable Integer codigo,//para indicar que vas a enviar ese dato en la url
-		@RequestBody Servicio servicioEditar,
-		@RequestHeader Map<String, String> header) {
-	System.out.println("Cabezera, autorization: " + header );
-	System.out.println("Editar el servicio con ID" + codigo);
-	System.out.println("Autor Data" + servicioEditar);
-	servicioEditar.setId(codigo);
-    
-    return servicioEditar;
-}
-
-@DeleteMapping(path ="delete/{codigo}")
-public void deleteServicio(
-		@PathVariable Integer codigo,//para indicar que vas a enviar ese dato en la url
-		@RequestHeader Map<String, String> header) {
-	System.out.println("Cabezera, autorization: " + header );
-	System.out.println("eliminar el servicio con ID " + codigo);
-
-}*/
 
 
 

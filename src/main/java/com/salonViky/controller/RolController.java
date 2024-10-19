@@ -18,13 +18,13 @@ import com.salonViky.service.RolService;
 @RequestMapping("rol")
 public class RolController {
 	@Autowired
-	RolService rs;
+	RolService rolService;
 	
 	@GetMapping("listar")
 	private Map<String, Object> listar() {
 		Map<String, Object> result = new HashMap<String, Object>();
 		result.put("ok",true);
-		result.put("list", rs.listar());
+		result.put("list", rolService.listar());
 		return result;
 	}
 

@@ -224,7 +224,7 @@ public class VentasController {
 	            detalle.setEstado("Activo"); // Asumiendo que "Activo" es el estado por defecto
 	            
 	            // Guardar el detalle usando el servicio
-	            detalle = ventaDetalleService.guardar(detalle);
+	            detalle = ventaDetalleService.guardarDetalle(detalle);
 	            
 	            detallesActualizados.add(detalle);
 	        }
@@ -237,7 +237,7 @@ public class VentasController {
 	        ventaExistente.calcularTotal();
 
 	        // Guardar la venta actualizada
-	        Ventas ventaActualizada = ventasService.guardar(ventaExistente);
+	        Ventas ventaActualizada = ventasService.actualizar(ventaExistente);
 
 	        // Preparar la respuesta
 	        resultado.put("ok", true);
@@ -287,7 +287,7 @@ public class VentasController {
 
 	    // Marcar la venta como inactiva
 	    ventas.setEstado("Inactivo");
-	    ventasService.guardar(ventas);
+	    ventasService.eliminarActivo(ventas);
 
 	    // Preparar la respuesta
 	    resultado.put("ok", true);
@@ -295,225 +295,6 @@ public class VentasController {
 	    
 	    return ResponseEntity.ok(resultado);
 	}
-	/*este funciona pero duplica el id de detalle 
-	 * 	@PutMapping("editar2/{id}")
-	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @Valid @RequestBody Ventas ventas) {
-	    Map<String, Object> resultado = new HashMap<>();
-
-	    // Verificar si la venta, el usuario y cliente existen
-	    Ventas ventaExistente = ventasService.findById(id)
-	            .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
-	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
-	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
-	    
-	    if (usuario == null) {
-	        throw new RuntimeException("El usuario proporcionado no existe.");
-	    } else if (cliente == null) {
-	        throw new RuntimeException("El cliente proporcionado no existe.");
-	    }
-
-	    // Asignar el ID de la venta, usuario y cliente
-	    ventas.setId(id); // Mantener el ID de la venta
-	    ventas.setUsuario(ventaExistente.getUsuario()); // Mantener el usuario
-	    ventas.setCliente(ventaExistente.getCliente()); // Mantener el client_e
-	    
-	    // Guardar la venta actualizada
-	    Ventas ventaActualizada = ventasService.guardar(ventas);
-	    
-	    ventaActualizada.setId(id);
-	    
-	    ventaActualizada.getDetalles().clear();
-	    
-	    // Iterar sobre los detalles de la venta
-	    for (VentaDetalle detalle : ventas.getDetalles()) {
-	        // Verificar y cargar el servicio desde la base de datos
-	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
-	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
-	        // Asignar el servicio al detalle
-	        detalle.setServicio(servicio);        
-	        // Asignar la venta al detalle
-	        detalle.setVentas(ventaActualizada);	
-	        ventaExistente.getDetalles().add(detalle);
-	        // Guardar el detalle
-	       // ventasDetalleRepository.save(detalle);
-	        
-	    }
-	  Ventas ventasNew =  ventasService.guardar(ventaActualizada);
-
-	    // Preparar la respuesta
-	    resultado.put("ok", true);
-	    resultado.put("message", "Venta actualizada exitosamente.");
-	    resultado.put("venta", ventasNew);
-	    
-	    return ResponseEntity.status(HttpStatus.OK).body(resultado);
-	}
-	 */
 	
-/*		@PutMapping("editar2/{id}")
-	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @Valid @RequestBody Ventas ventas) {
-	    Map<String, Object> resultado = new HashMap<>();
-
-	    // Verificar si la venta, el usuario y cliente existen
-	    Ventas ventaExistente = ventasService.findById(id)
-	            .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
-	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
-	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
-	    
-	    if (usuario == null) {
-	        throw new RuntimeException("El usuario proporcionado no existe.");
-	    } else if (cliente == null) {
-	        throw new RuntimeException("El cliente proporcionado no existe.");
-	    }
-
-	    // Asignar el ID de la venta, usuario y cliente
-	    ventas.setId(id); // Mantener el ID de la venta
-	    ventas.setUsuario(ventaExistente.getUsuario()); // Mantener el usuario
-	    ventas.setCliente(ventaExistente.getCliente()); // Mantener el client_e
-	    
-	    // Guardar la venta actualizada
-	    Ventas ventaActualizada = ventasService.guardar(ventas);
-	    
-	    ventaActualizada.setId(id);
-	    
-	    ventaActualizada.getDetalles().clear();
-	    double total = 0;
-	    
-	    // Iterar sobre los detalles de la venta
-	    for (VentaDetalle detalle : ventas.getDetalles()) {
-	        // Verificar y cargar el servicio desde la base de datos
-	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
-	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
-	        // Asignar el servicio al detalle
-	        detalle.setServicio(servicio);        
-	        // Asignar la venta al detalle
-	        detalle.setVentas(ventaActualizada);	
-	        
-	        // Calcular subtotal y añadirlo al total
-	        double subtotal = detalle.getCantidad() * detalle.getPrecioUnitario();
-	        detalle.setSubTotal(subtotal);
-	        total += subtotal;
-	        
-	        // Guardar el detalle
-	        ventasDetalleRepository.save(detalle);
-	    }
-
-	    ventaExistente.setTotal(total);
-	    
-	    Ventas ventacreada = ventasService.guardar(ventaExistente);
-
-	    // Preparar la respuesta
-	    resultado.put("ok", true);
-	    resultado.put("message", "Venta actualizada exitosamente.");
-	    resultado.put("venta", ventacreada);
-	    
-	    return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
-	}*/
-	
-	// hug
-	/*@PutMapping("editar2/{id}")
-	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @Valid @RequestBody Ventas ventas) {
-	    Map<String, Object> resultado = new HashMap<>();
-
-	    // Verificar si la venta, el usuario y cliente existen
-	    Ventas ventaExistente = ventasService.findById(id)
-	            .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
-	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId()).orElse(null);
-	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId()).orElse(null);
-	    
-	    if (usuario == null) {
-	        throw new RuntimeException("El usuario proporcionado no existe.");
-	    } else if (cliente == null) {
-	        throw new RuntimeException("El cliente proporcionado no existe.");
-	    }
-
-	    // Asignar el ID de la venta, usuario y cliente
-	    ventas.setId(id); // Mantener el ID de la venta
-	    ventas.setUsuario(ventaExistente.getUsuario()); // Mantener el usuario
-	    ventas.setCliente(ventaExistente.getCliente()); // Mantener el client_e
-	    
-	    // Guardar la venta actualizada
-	    Ventas ventaActualizada = ventasService.guardar(ventas);
-	    
-	    ventaActualizada.setId(id);
-	    
-	    ventaActualizada.getDetalles().clear();
-	    
-	    // Iterar sobre los detalles de la venta
-	    for (VentaDetalle detalle : ventas.getDetalles()) {
-	        // Verificar y cargar el servicio desde la base de datos
-	        Servicio servicio = servicioRepository.findById(detalle.getServicio().getId())
-	            .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
-	        // Asignar el servicio al detalle
-	        detalle.setServicio(servicio);        
-	        // Asignar la venta al detalle
-	        detalle.setVentas(ventaActualizada);	
- 			ventasDetalleRepository.save(detalle);
-	        
-	    }
-	  Ventas ventasNew =  ventasService.guardar(ventaActualizada);
-
-	    // Preparar la respuesta
-	    resultado.put("ok", true);
-	    resultado.put("message", "Venta actualizada exitosamente.");
-	    resultado.put("venta", ventasNew);
-	    
-	    return ResponseEntity.status(HttpStatus.OK).body(resultado);
-	}*/
-	/*	@PutMapping("editar/{id}")
-	public ResponseEntity<Map<String, Object>> editarVentas(@PathVariable("id") Integer id, @RequestBody Ventas ventas) {
-	    Map<String, Object> resultado = new HashMap<>();
-
-	    // Verificar si la venta, el usuario y cliente existen
-	    Ventas ventaExistente = ventasService.findById(id)
-	        .orElseThrow(() -> new RuntimeException("Ventas con id " + id + " no existe"));
-	    Usuario usuario = usuarioRepository.findById(ventas.getUsuario().getId())
-	        .orElseThrow(() -> new RuntimeException("El usuario proporcionado no existe."));
-	    Cliente cliente = clienteRepository.findById(ventas.getCliente().getId())
-	        .orElseThrow(() -> new RuntimeException("El cliente proporcionado no existe."));
-
-	    // Actualizar los campos de la venta existente
-	    ventaExistente.setFecha(ventas.getFecha());
-	    ventaExistente.setTotal(ventas.getTotal());
-	    ventaExistente.setEstado(ventas.getEstado());
-	    
-	    // Manejar los detalles de la venta
-	    List<VentaDetalle> detallesActualizados = new ArrayList<VentaDetalle>();
-	    
-	    double total = 0;
-	    for (VentaDetalle detalleNuevo : ventas.getDetalles()) {
-	        VentaDetalle detalleExistente = ventaExistente.getDetalles().stream()
-	            .filter(d -> d.getId().equals(detalleNuevo.getId()))
-	            .findFirst()
-	            .orElse(null);
-
-	      
-	            // Crear nuevo detalle
-	            Servicio servicio = servicioRepository.findById(detalleNuevo.getServicio().getId())
-	                .orElseThrow(() -> new RuntimeException("El servicio proporcionado no existe."));
-
-	         
-	            detalleNuevo.setServicio(servicio);
-	            detalleNuevo.setVentas(ventaExistente);
-	            detalleNuevo.setId(null); // Asegurarse de que se genere un nuevo ID
-	            detallesActualizados.add(detalleNuevo);
-	    }
-
-	    
-	    // Actualizar la lista de detalles
-	    ventaExistente.getDetalles().clear();
-	    ventaExistente.getDetalles().addAll(detallesActualizados);
-
-	    ventaExistente.setTotal(total);
-	    
-	    // Guardar la venta actualizada
-	    Ventas ventaActualizada = ventasService.guardar(ventaExistente);
-
-	    // Preparar la respuesta
-	    resultado.put("ok", true);
-	    resultado.put("message", "Venta actualizada exitosamente.");
-	    resultado.put("venta", ventaActualizada);
-
-	    return ResponseEntity.status(HttpStatus.OK).body(resultado);
-	}*/
 
 }

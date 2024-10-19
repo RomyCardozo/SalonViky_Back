@@ -42,7 +42,7 @@ public class VentaDetalleService {
 	}
 
 
-	    public VentaDetalle guardar(VentaDetalle ventaDetalle) {
+	    public VentaDetalle guardarDetalle(VentaDetalle ventaDetalle) {
 	        Set<ConstraintViolation<VentaDetalle>> violations = validator.validate(ventaDetalle);
 
 	        if (!violations.isEmpty()) {

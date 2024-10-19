@@ -1,5 +1,6 @@
 package com.salonViky.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,9 +38,17 @@ public class ServicioService {
 	public Servicio guardar(Servicio servicio) {
 		return servicioRepository.save(servicio);
 	}
+	
+	public Servicio actualizar(Servicio servicio) {
+		return servicioRepository.save(servicio);
+	}
+	
+	public Servicio eliminarActivo(Servicio servicio) {
+		return servicioRepository.save(servicio);
+	}
 
     //buscar id
-    public Optional<Servicio> buscarPorId(Integer id) {
+ public Optional<Servicio> buscarPorId(Integer id) {
         return servicioRepository.findById(id);
     }
 
@@ -48,5 +57,8 @@ public class ServicioService {
         servicioRepository.deleteById(id);
     }
     
+    public List<Object[]> obtenerResumenServicios(LocalDateTime startDate, LocalDateTime endDate) {
+        return servicioRepository.findResumenServicios(startDate, endDate);
+    }
 	
 }
