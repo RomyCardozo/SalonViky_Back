@@ -1,6 +1,5 @@
 package com.salonViky.model;
 
-
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -15,28 +14,19 @@ import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+
 @Entity
-@Table(name="auditorias")
+@Table(name = "auditorias")
 public class Auditoria {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)//el identity = usa la pk generada en el postgress
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // el identity = usa la pk generada en el postgress
 	private Integer id;
-	
-
 	private String usuario;
-	
-	
 	@Temporal(TemporalType.TIMESTAMP)
-
-	private LocalDateTime fecha;//ver como se le pone al tipo date 
-	
-
+	private LocalDateTime fecha;// ver como se le pone al tipo date
 	private String tabla;
-	
-
 	private String operacion;
-
 	private String descripcion;
 
 	public Integer getId() {
@@ -67,7 +57,6 @@ public class Auditoria {
 		this.tabla = tabla;
 	}
 
-
 	public String getOperacion() {
 		return operacion;
 	}
@@ -90,12 +79,12 @@ public class Auditoria {
 
 	@Override
 	public String toString() {
-		return "Auditoria [id=" + id + ", usuario=" + usuario + ", fecha=" + fecha + ", tabla=" + tabla
-				+ ", operacion=" + operacion + ", descripcion=" + descripcion + "]";
+		return "Auditoria [id=" + id + ", usuario=" + usuario + ", fecha=" + fecha + ", tabla=" + tabla + ", operacion="
+				+ operacion + ", descripcion=" + descripcion + "]";
 	}
 
-	public Auditoria(Integer id, String usuario, LocalDateTime fecha, String tabla,
-			String operacion, String descripcion) {
+	public Auditoria(Integer id, String usuario, LocalDateTime fecha, String tabla, String operacion,
+			String descripcion) {
 		super();
 		this.id = id;
 		this.usuario = usuario;
@@ -109,7 +98,4 @@ public class Auditoria {
 		super();
 	}
 
-
-	
-	
 }

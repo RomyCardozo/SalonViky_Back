@@ -19,21 +19,21 @@ import jakarta.validation.Validator;
 public class VentasService {
 
 	@Autowired
-	VentasRepository vr;
+	VentasRepository ventasRepository;
 
 	@Autowired
 	Validator validator;
 
 	public List<Ventas> listar() {
 		List<Ventas> result = new ArrayList<Ventas>();
-		vr.findAll().forEach(result::add);
+		ventasRepository.findAll().forEach(result::add);
 		;// retorna un iterable de user, debeemos cambiar pq no sirve para web service//
 			// convert iterable collection java
 		return result;
 	}
 
 	public List<Ventas> findAll() {
-		return (List<Ventas>) vr.findAll();
+		return (List<Ventas>) ventasRepository.findAll();
 	}
 
 	// este se utiliza para registrar y modificar
@@ -52,12 +52,12 @@ public class VentasService {
 			throw new RuntimeException(errorValidation);
 		}
 
-		return vr.save(ventas);
+		return ventasRepository.save(ventas);
 	}
 
 	public Ventas actualizar(Ventas ventas) {
 		// Calcular el total usando el método existente
-		//ventas.calcularTotal();
+		// ventas.calcularTotal();
 
 		// Realizar la validación
 		Set<ConstraintViolation<Ventas>> violations = validator.validate(ventas);
@@ -71,25 +71,25 @@ public class VentasService {
 			throw new RuntimeException(errorMessage.toString());
 		}
 
-		return vr.save(ventas);
+		return ventasRepository.save(ventas);
 	}
 
 	public Ventas eliminarActivo(Ventas ventas) {
 
-		return vr.save(ventas);
+		return ventasRepository.save(ventas);
 	}
 
 	// buscar id
 	public Optional<Ventas> findById(Integer id) {
-		return vr.findById(id);
+		return ventasRepository.findById(id);
 	}
 
 	// eliminar por id
 	public void deleteById(Integer id) {
-		vr.deleteById(id);
+		ventasRepository.deleteById(id);
 	}
 
 	public List<Ventas> obtenerVentasPorFechas(LocalDateTime startDate, LocalDateTime endDate) {
-        return vr.findByFechaBetween(startDate, endDate);
-    }
+		return ventasRepository.findByFechaBetween(startDate, endDate);
+	}
 }

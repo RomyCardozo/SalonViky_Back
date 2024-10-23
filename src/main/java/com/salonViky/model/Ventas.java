@@ -26,60 +26,60 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name="ventas")
+@Table(name = "ventas")
 public class Ventas {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)//el identity = usa la pk generada en el postgress
-	@Column(name="ventas_id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // el identity = usa la pk generada en el postgress
+	@Column(name = "ventas_id")
 	private Integer id;
-	
-	@Temporal(TemporalType.TIMESTAMP) // timestamp es fecha y hora, le debemos especificar que es 
+
+	@Temporal(TemporalType.TIMESTAMP) // timestamp es fecha y hora, le debemos especificar que es
 	@Column(name = "fecha", nullable = false, columnDefinition = "TIMESTAMP DEFAULT NOW()")
-	@NotNull 
+	@NotNull
 	private LocalDateTime fecha;
-	
-	@NotNull 
+
+	@NotNull
 	private Double total;
-	
-	@NotNull @NotBlank 
+
+	@NotNull
+	@NotBlank
 	private String estado;
-	
+
 	@ManyToOne
-	@JoinColumn(name="usuario_id")
+	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;
-	
+
 	@ManyToOne
-	@JoinColumn(name="cliente_id")
+	@JoinColumn(name = "cliente_id")
 	private Cliente cliente;
 
-	@OneToMany(mappedBy = "ventas" ,cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "ventas", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<VentaDetalle> detalles;
-	
-    public void actualizarDatos(Ventas nuevaVenta) {
-        this.setFecha(nuevaVenta.getFecha());
-        this.setEstado(nuevaVenta.getEstado());
-        // Actualiza los campos de usuario y cliente
-        this.setUsuario(nuevaVenta.getUsuario()); // Asegúrate de tener un método setUsuario
-        this.setCliente(nuevaVenta.getCliente()); // Asegúrate de tener un método setClient
-        
-        // El total se calcula automáticamente, no lo actualizamos aquí
-    }
-	   public void calcularTotal() {
-	        this.total = detalles.stream()
-	                .mapToDouble(VentaDetalle::getSubTotal)
-	                .sum();
-	    }
 
-	    public void addDetalle(VentaDetalle detalle) {
-	        detalles.add(detalle);
-	        detalle.setVentas(this);
-	    }
+	public void actualizarDatos(Ventas nuevaVenta) {
+		this.setFecha(nuevaVenta.getFecha());
+		this.setEstado(nuevaVenta.getEstado());
+		// Actualiza los campos de usuario y cliente
+		this.setUsuario(nuevaVenta.getUsuario()); // Asegúrate de tener un método setUsuario
+		this.setCliente(nuevaVenta.getCliente()); // Asegúrate de tener un método setClient
 
-	    public void removeDetalle(VentaDetalle detalle) {
-	        detalles.remove(detalle);
-	        detalle.setVentas(null);
-	    }
-	
+		// El total se calcula automáticamente, no lo actualizamos aquí
+	}
+
+	public void calcularTotal() {
+		this.total = detalles.stream().mapToDouble(VentaDetalle::getSubTotal).sum();
+	}
+
+	public void addDetalle(VentaDetalle detalle) {
+		detalles.add(detalle);
+		detalle.setVentas(this);
+	}
+
+	public void removeDetalle(VentaDetalle detalle) {
+		detalles.remove(detalle);
+		detalle.setVentas(null);
+	}
+
 	public List<VentaDetalle> getDetalles() {
 		return detalles;
 	}
@@ -155,13 +155,10 @@ public class Ventas {
 		this.id = id;
 	}
 
-
 	@Override
 	public String toString() {
 		return "Ventas [id=" + id + ", fecha=" + fecha + ", total=" + total + ", estado=" + estado + ", usuario="
 				+ usuario + ", cliente=" + cliente + "]";
 	}
 
-	
-	
 }

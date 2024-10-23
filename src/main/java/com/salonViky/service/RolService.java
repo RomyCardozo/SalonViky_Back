@@ -13,11 +13,11 @@ import com.salonViky.repository.RolRepository;
 public class RolService {
 
 	@Autowired
-	RolRepository rolRep;
+	RolRepository rolRepository;
 	
 	public List<Rol> listar(){
 		List<Rol> result = new ArrayList<Rol>();
-		rolRep.findAll().forEach(result::add);;//retorna un iterable de user, debeemos cambiar
+		rolRepository.findAll().forEach(result::add);;//retorna un iterable de user, debeemos cambiar
 		//pq no sirve para web service// convert iterable collection java
 		return result;
 	}

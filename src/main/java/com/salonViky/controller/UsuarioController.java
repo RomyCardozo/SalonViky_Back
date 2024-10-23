@@ -26,165 +26,111 @@ import com.salonViky.service.UsuarioService;
 
 import jakarta.validation.Valid;
 
-
-
 @RestController
 @RequestMapping("usuario")
 public class UsuarioController {
-	
+
 	@Autowired
 	UsuarioService usuarioService;
-	
-    @Autowired
-     RolRepository rolRepository;
+
+	@Autowired
+	RolRepository rolRepository;
 
 	@GetMapping("listar")
 	public Map<String, Object> listar() {
 		Map<String, Object> result = new HashMap<String, Object>();
-		result.put("ok",true);
+		result.put("ok", true);
 		result.put("list", usuarioService.listar());
 		return result;
-		}
-	
+	}
 
 	@GetMapping("consultarPaginado")
-	public Map<String, Object> listarPorLikePaginado( @RequestParam String q, Pageable pageable) {
-		
+	public Map<String, Object> listarPorLikePaginado(@RequestParam String q, Pageable pageable) {
+
 		Map<String, Object> resultado = new HashMap<>();
-	    
+
 		List<Usuario> usuarios = usuarioService.listarPorNombrePaginacion("%" + q + "%", pageable);
 
-	    if (usuarios.isEmpty()) {
-	        throw new RuntimeException(" No existen los datos con los filtros proporcionados");
-	    } else {
-	        resultado.put("ok", true);
-	        resultado.put("list", usuarios);
-	    }
+		if (usuarios.isEmpty()) {
+			throw new RuntimeException(" No existen los datos con los filtros proporcionados");
+		} else {
+			resultado.put("ok", true);
+			resultado.put("list", usuarios);
+		}
 
-	    return resultado;
+		return resultado;
 
 	}
-	
+
 	@PostMapping("guardar")
-	public ResponseEntity<Map<String, Object>> guardarUsuario( @Valid @RequestBody Usuario usuario) {
-	    Map<String, Object> result = new HashMap<>();
-	    
-	        
-	        Optional<Rol> rolExistente = rolRepository.findById(usuario.getRol().getId());
-	        if (!rolExistente.isPresent()) {
-	            throw new RuntimeException("Rol proporcionado no existe ");
-	        }else {
-	        	// Asignar el rol encontrado al usuario
-	            usuario.setRol(rolExistente.get());
-	        // Guardar el usuario
-	        Usuario UsuarioGuardado = usuarioService.guardar(usuario);
-	             
-	        // Preparar la respuesta
-	        result.put("ok", true);
-	        result.put("message", "Usuario creado exitosamente.");
-	        result.put("Usuario", UsuarioGuardado);
-	        return ResponseEntity.status(HttpStatus.CREATED).body(result);}
+	public ResponseEntity<Map<String, Object>> guardarUsuario(@Valid @RequestBody Usuario usuario) {
+		Map<String, Object> result = new HashMap<>();
+
+		Optional<Rol> rolExistente = rolRepository.findById(usuario.getRol().getId());
+		if (!rolExistente.isPresent()) {
+			throw new RuntimeException("Rol proporcionado no existe ");
+		} else {
+			// Asignar el rol encontrado al usuario
+			usuario.setRol(rolExistente.get());
+			// Guardar el usuario
+			Usuario UsuarioGuardado = usuarioService.guardar(usuario);
+
+			// Preparar la respuesta
+			result.put("ok", true);
+			result.put("message", "Usuario creado exitosamente.");
+			result.put("Usuario", UsuarioGuardado);
+			return ResponseEntity.status(HttpStatus.CREATED).body(result);
+		}
 	}
-	
+
 	@PutMapping("actualizar/{id}")
-	public ResponseEntity<Map<String, Object>> actualizarUsuario(@PathVariable("id") Integer id, @RequestBody Usuario usuario) {
-	    Map<String, Object> result = new HashMap<>();
-	    
-	    // Verificar si el Usuario existe
-	    if (usuarioService.findById(id).isPresent()) {
-	        // Actualizar el Usuario
-	    	usuario.setId(id);  // Asegurarse de que el ID del Usuario se mantiene
-	        Usuario actualizado = usuarioService.actualizar(usuario);    
-	        // Preparar la respuesta exitosa
-	        result.put("ok", true);
-	        result.put("message", "Usuario actualizado exitosamente.");
-	        result.put("Usuario", actualizado);
-	        return ResponseEntity.ok(result);
-	    } else {
-	    	throw new RuntimeException("Usuario no encontrado.");
-	    }
+	public ResponseEntity<Map<String, Object>> actualizarUsuario(@PathVariable("id") Integer id,
+			@RequestBody Usuario usuario) {
+		Map<String, Object> result = new HashMap<>();
+
+		// Verificar si el Usuario existe
+		if (usuarioService.findById(id).isPresent()) {
+			// Actualizar el Usuario
+			usuario.setId(id); // Asegurarse de que el ID del Usuario se mantiene
+			Usuario actualizado = usuarioService.actualizar(usuario);
+			// Preparar la respuesta exitosa
+			result.put("ok", true);
+			result.put("message", "Usuario actualizado exitosamente.");
+			result.put("Usuario", actualizado);
+			return ResponseEntity.ok(result);
+		} else {
+			throw new RuntimeException("Usuario no encontrado.");
+		}
 	}
-	
+
 	@DeleteMapping("eliminar/{id}")
 	public ResponseEntity<Map<String, Object>> eliminarServicio(@PathVariable("id") Integer id) {
-	    Map<String, Object> result = new HashMap<>();
-	    
-	    if (usuarioService.findById(id).isPresent()) {
-	    	usuarioService.deleteById(id);
-	        result.put("ok", true);
-	        result.put("message", "usuario eliminado exitosamente.");
-	        return ResponseEntity.ok(result);
-	    } else {
-	    	throw new RuntimeException("id no existe");
-	    }
+		Map<String, Object> result = new HashMap<>();
+
+		if (usuarioService.findById(id).isPresent()) {
+			usuarioService.deleteById(id);
+			result.put("ok", true);
+			result.put("message", "usuario eliminado exitosamente.");
+			return ResponseEntity.ok(result);
+		} else {
+			throw new RuntimeException("id no existe");
+		}
 	}
-	
-	//anular cliente // en el front mostrar clientes con activo nomas
+
+	// anular cliente // en el front mostrar clientes con activo nomas
 	@PutMapping("eliminar/{id}")
 	public ResponseEntity<Map<String, Object>> eliminarClienteActivo(@PathVariable Integer id) {
-	    Map<String, Object> resultado = new HashMap<>();
-	    Usuario usuario = usuarioService.findById(id).orElse(null);
-	    
-	    if (usuario == null) {
-	        throw new RuntimeException("id no existe");
-	    }
-	    usuario.setEstado("Inactivo");
-	    usuarioService.eliminarActivo(usuario);  
-	    resultado.put("ok", true);
-	    resultado.put("message", "usuario marcado como inactivo");
-	    return ResponseEntity.ok(resultado);
-	}	
-	
-	
-	/*	@GetMapping("/nombre/{nombre}")
-	public Map<String, Object> obtenerUsuarioPorNombre(@PathVariable("nombre") String nombre) {
-	    List<Usuario> usuarios = us.listarPorNombre(nombre);
-	    Map<String, Object> response = new HashMap<String, Object>();
-	    
-	    if (usuarios.isEmpty()) {
-	        // Si no se encuentran Servicios, retornar un error 404 con un mensaje
-	    	response.put("mensaje", "Usuario con nombre: " + nombre + " no encontrado");
-	    	
-	       
-	    } else {
-	        // Si se encuentran Servicios, retornar un status 200 con la lista de Servicios
-	    	response.put("mensaje", "Usuario con nombre: " + nombre + " encontrado");
-	        response.put("usuarios", us.listarPorNombre(nombre));
-	       
-	    }
-	    return response;
-	}*/
-	
-	/*
-	
-	@PostMapping(path ="save")
-	public Usuario registrarUsuario( @RequestBody Usuario usuarioRegistro){
-		System.out.println("Crear usuario: " + usuarioRegistro);
-		//realizar una operacion de insert en la bd
-		return usuarioRegistro;
-	}	
-	
-	@PutMapping(path ="update/{codigo}")
-	public Usuario modificarUsuarios(
-			@PathVariable Integer codigo,//para indicar que vas a enviar ese dato en la url
-			@RequestBody Usuario usuarioModificar,
-			@RequestHeader Map<String, String> header) {
-		System.out.println("Cabezera, autorization: " + header );
-		System.out.println("Editar el permiso con ID: " + codigo);
-		System.out.println("Autor Data: " + usuarioModificar);
-		usuarioModificar.setId(codigo);
-	    
-	    return usuarioModificar;
-	}	
-	
-	@DeleteMapping(path ="delete/{codigo}")
-	public void deleteUsuarios(
-			@PathVariable Integer codigo,//para indicar que vas a enviar ese dato en la url
-			@RequestHeader Map<String, String> header) {
-		System.out.println("Cabezera, autorization: " + header );
-		System.out.println("eliminar el usuario con ID: " + codigo);
+		Map<String, Object> resultado = new HashMap<>();
+		Usuario usuario = usuarioService.findById(id).orElse(null);
 
+		if (usuario == null) {
+			throw new RuntimeException("id no existe");
+		}
+		usuario.setEstado("Inactivo");
+		usuarioService.eliminarActivo(usuario);
+		resultado.put("ok", true);
+		resultado.put("message", "usuario marcado como inactivo");
+		return ResponseEntity.ok(resultado);
 	}
-	*/
-	
+
 }

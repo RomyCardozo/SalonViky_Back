@@ -34,12 +34,10 @@ public class ClienteService {
     }	
 	
     public Cliente guardar(Cliente cliente) {
-        //auditoriaservice.guardar(usuario,"edicion de usuario", "cliente", cliente.id)
         return clienteRepository.save(cliente);
     }
 
     public Cliente actualizar(Cliente cliente) {
-        //auditoriaservice.guardar(usuario,"edicion de usuario", "cliente", cliente.id)
         return clienteRepository.save(cliente);
     }
     
@@ -55,37 +53,5 @@ public class ClienteService {
     public void eliminarPorId(Integer id) {
         clienteRepository.deleteById(id);
     }
-    /* public List<Cliente> listarPorNombre(String nombre) {
-    return cr.findByNombre(nombre);
-}
-
-public List<Cliente> buscarPorNombreOApellido(String nombre) {
-    return cr.findByNombreLikeIgnoreCaseOrApellidoLikeIgnoreCase(nombre, nombre);
-}*/
-//buscar por nombre
-
-//guardar o registrar
-/*public Cliente guardar(Cliente cliente) {
-	return cr.save(cliente);
-}*/
-    
-	/*public List<Cliente> obtenerPorFiltroYPaginacion(
-			String filtro, Integer pagina,
-			Integer tamano){
-		List<Cliente> clientes = cr.byFilterPagination
-				(filtro, pagina, tamano);
-		//agregar o hacer mas cosas con clientes
-		return clientes;
-	}*/
-	
-	
-	/*public Cliente insertOrUpdate(Cliente cliente) {
-		//Validacion
-		if (!(cliente.getNombre() != null && cliente.getNombre().length() > 3)) {
-			throw new RuntimeException("Error en Nombre de cliente");
-		}
-		Cliente clienteBuscar = cr.findById(cliente.getId());
-		return clienteBuscar;
-	}*/
 
 }
